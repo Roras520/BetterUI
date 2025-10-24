@@ -1,0 +1,279 @@
+local BaseComponent = loadstring(game:HttpGet(githubDirectory("BaseComponent")))()
+local TweenService = game:GetService("TweenService")
+
+local Button = {}
+Button.__index = Button
+setmetatable(Button, BaseComponent)
+
+-- Type definitions
+export type ButtonConfig = {
+    Name: string,
+    Parent: Instance?,
+    Position: UDim2?,
+    Size: UDim2?,
+    Text: string?,
+    TextColor: Color3?,
+    BackgroundColor: Color3?,
+    BorderColor: Color3?,
+    CornerRadius: UDim?,
+    Font: Enum.Font?,
+    TextSize: number?,
+    HoverColor: Color3?,
+    ClickColor: Color3?,
+    Disabled: boolean?,
+    Callback: ((any) -> ())?,
+}
+
+export type Button = {
+    Text: string,
+    TextColor: Color3,
+    BackgroundColor: Color3,
+    BorderColor: Color3,
+    CornerRadius: UDim,
+    Font: Enum.Font,
+    TextSize: number,
+    HoverColor: Color3,
+    ClickColor: Color3,
+    Disabled: boolean,
+    Callback: ((any) -> ())?,
+    
+    new: (config: ButtonConfig) -> Button,
+    SetText: (self: Button, text: string) -> boolean,
+    SetCallback: (self: Button, callback: (any) -> ()) -> boolean,
+    SetDisabled: (self: Button, disabled: boolean) -> boolean,
+    Click: (self: Button) -> boolean,
+    Name: string,
+    Instance: Instance,
+    Parent: Instance?,
+    Config: ButtonConfig,
+    Connections: {[string]: RBXScriptConnection},
+    Children: {[string]: Button},
+    Destroy: (self: Button) -> boolean,
+    SetVisible: (self: Button, visible: boolean) -> boolean,
+    SetParent: (self: Button, parent: Instance) -> boolean,
+    AddChild: (self: Button, child: Button) -> boolean,
+    RemoveChild: (self: Button, name: string) -> boolean,
+    GetChild: (self: Button, name: string) -> Button?,
+    Connect: (self: Button, event: string, callback: (any) -> ()) -> RBXScriptConnection?,
+    Disconnect: (self: Button, connectionName: string) -> boolean,
+}
+
+-- Constants
+local DEFAULT_ANIMATION_SPEED = 0.15
+local DEFAULT_HOVER_MULTIPLIER = 0.9
+local DEFAULT_CLICK_MULTIPLIER = 0.8
+
+-- Constructor
+function Button.new(config: ButtonConfig): Button
+    if not config or type(config) ~= "table" then
+        error("Button: Invalid config provided")
+    end
+    
+    local self = BaseComponent.new(config)
+    setmetatable(self, Button)
+    
+    -- Set default values
+    self.Text = config.Text or "Button"
+    self.TextColor = config.TextColor or Color3.fromRGB(255, 255, 255)
+    self.BackgroundColor = config.BackgroundColor or Color3.fromRGB(100, 100, 100)
+    self.BorderColor = config.BorderColor or Color3.fromRGB(50, 50, 50)
+    self.CornerRadius = config.CornerRadius or UDim.new(0, 6)
+    self.Font = config.Font or Enum.Font.Gotham
+    self.TextSize = config.TextSize or 14
+    self.HoverColor = config.HoverColor or Color3.fromRGB(120, 120, 120)
+    self.ClickColor = config.ClickColor or Color3.fromRGB(80, 80, 80)
+    self.Disabled = config.Disabled or false
+    self.Callback = config.Callback
+    
+    -- Create the button instanc
+    local success, result = pcall(function()
+        local button = Instance.new("TextButton")
+        button.Name = self.Name
+        button.Size = config.Size or UDim2.new(0, 120, 0, 30)
+        button.Position = config.Position or UDim2.new(0, 0, 0, 0)
+        button.BackgroundColor3 = self.BackgroundColor
+        button.TextColor3 = self.TextColor
+        button.Text = self.Text
+        button.Font = self.Font
+        button.TextSize = self.TextSize
+        button.TextScaled = false
+        button.AutoButtonColor = false
+        button.Active = not self.Disabled
+        button.Parent = config.Parent
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = self.CornerRadius
+        corner.Parent = button
+        
+        local border = Instance.new("UIStroke")
+        border.Color = self.BorderColor
+        border.Thickness = 1
+        border.Parent = button
+        
+        self.Instance = button
+        
+        self:_setupHoverEffects()
+        
+        self:_setupClickHandling()
+    end)
+    
+    if not success then
+        error("Button: Failed to create button instance: " .. tostring(result))
+    end
+    
+    return self
+end
+
+function Button:_setupHoverEffects()
+    if not self.Instance then return end
+    
+    local originalColor = self.BackgroundColor
+    local hoverTween = nil
+    local leaveTween = nil
+    
+    self:Connect("MouseEnter", function()
+        if self.Disabled then return end
+        
+        if leaveTween then
+            leaveTween:Cancel()
+        end
+        
+        hoverTween = TweenService:Create(
+            self.Instance,
+            TweenInfo.new(DEFAULT_ANIMATION_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = self.HoverColor}
+        )
+        hoverTween:Play()
+    end)
+    
+    self:Connect("MouseLeave", function()
+        if self.Disabled then return end
+        
+        if hoverTween then
+            hoverTween:Cancel()
+        end
+        
+        leaveTween = TweenService:Create(
+            self.Instance,
+            TweenInfo.new(DEFAULT_ANIMATION_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = originalColor}
+        )
+        leaveTween:Play()
+    end)
+end
+
+function Button:_setupClickHandling()
+    if not self.Instance then return end
+    
+    local originalColor = self.BackgroundColor
+    local clickTween = nil
+    local releaseTween = nil
+    
+    self:Connect("MouseButton1Down", function()
+        if self.Disabled then return end
+        
+        if releaseTween then
+            releaseTween:Cancel()
+        end
+        
+        clickTween = TweenService:Create(
+            self.Instance,
+            TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = self.ClickColor}
+        )
+        clickTween:Play()
+    end)
+    
+    self:Connect("MouseButton1Up", function()
+        if self.Disabled then return end
+        
+        if clickTween then
+            clickTween:Cancel()
+        end
+        
+        releaseTween = TweenService:Create(
+            self.Instance,
+            TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = self.HoverColor}
+        )
+        releaseTween:Play()
+    end)
+    
+    self:Connect("Activated", function()
+        if self.Disabled or not self.Callback then return end
+        
+        local success, result = pcall(self.Callback)
+        if not success then
+            warn("Button: Callback failed:", result)
+        end
+    end)
+end
+
+function Button:SetText(text: string): boolean
+    if not text or type(text) ~= "string" then
+        warn("Button: Invalid text provided")
+        return false
+    end
+    
+    local success, result = pcall(function()
+        self.Text = text
+        if self.Instance then
+            self.Instance.Text = text
+        end
+    end)
+    
+    if not success then
+        warn("Button: Failed to set text:", result)
+        return false
+    end
+    
+    return true
+end
+
+function Button:SetCallback(callback: (any) -> ()): boolean
+    if callback and type(callback) ~= "function" then
+        warn("Button: Callback must be a function")
+        return false
+    end
+    
+    self.Callback = callback
+    return true
+end
+
+function Button:SetDisabled(disabled: boolean): boolean
+    if type(disabled) ~= "boolean" then
+        warn("Button: Disabled must be a boolean")
+        return false
+    end
+    
+    local success, result = pcall(function()
+        self.Disabled = disabled
+        if self.Instance then
+            self.Instance.Active = not disabled
+            self.Instance.TextTransparency = disabled and 0.5 or 0
+        end
+    end)
+    
+    if not success then
+        warn("Button: Failed to set disabled state:", result)
+        return false
+    end
+    
+    return true
+end
+
+function Button:Click(): boolean
+    if self.Disabled or not self.Callback then
+        return false
+    end
+    
+    local success, result = pcall(self.Callback)
+    if not success then
+        warn("Button: Callback failed:", result)
+        return false
+    end
+    
+    return true
+end
+
+return Button

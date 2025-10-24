@@ -1,3 +1,6 @@
+function githubDirectory(string)
+    return "https://raw.githubusercontent.com/Roras520/BetterUI/refs/heads/main/" .. string
+end
 local BaseComponent = loadstring(game:HttpGet(githubDirectory("BaseComponent")))()
 local TweenService = game:GetService("TweenService")
 

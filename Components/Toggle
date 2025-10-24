@@ -1,0 +1,245 @@
+local BaseComponent = loadstring(game:HttpGet(githubDirectory("BaseComponent")))()
+local TweenService = game:GetService("TweenService")
+
+local Toggle = {}
+Toggle.__index = Toggle
+setmetatable(Toggle, BaseComponent)
+
+-- Type definitions
+export type ToggleConfig = {
+    Name: string,
+    Parent: Instance?,
+    Position: UDim2?,
+    Size: UDim2?,
+    Text: string?,
+    TextColor: Color3?,
+    BackgroundColor: Color3?,
+    ActiveColor: Color3?,
+    InactiveColor: Color3?,
+    BorderColor: Color3?,
+    CornerRadius: UDim?,
+    Font: Enum.Font?,
+    TextSize: number?,
+    DefaultState: boolean?,
+    Callback: ((boolean) -> ())?,
+    Flag: string?,
+}
+
+export type Toggle = BaseComponent.Component & {
+    Text: string,
+    TextColor: Color3,
+    BackgroundColor: Color3,
+    ActiveColor: Color3,
+    InactiveColor: Color3,
+    BorderColor: Color3,
+    CornerRadius: UDim,
+    Font: Enum.Font,
+    TextSize: number,
+    State: boolean,
+    Callback: ((boolean) -> ())?,
+    Flag: string?,
+    
+    new: (config: ToggleConfig) -> Toggle,
+    SetText: (self: Toggle, text: string) -> boolean,
+    SetState: (self: Toggle, state: boolean) -> boolean,
+    Toggle: (self: Toggle) -> boolean,
+    SetCallback: (self: Toggle, callback: (boolean) -> ()) -> boolean,
+    GetState: (self: Toggle) -> boolean,
+}
+
+-- Constants
+local DEFAULT_ANIMATION_SPEED = 0.2
+local DEFAULT_SLIDER_SIZE = 0.6
+
+-- Constructor
+function Toggle.new(config: ToggleConfig): Toggle
+    if not config or type(config) ~= "table" then
+        error("Toggle: Invalid config provided")
+    end
+    
+    local self = BaseComponent.new(config)
+    setmetatable(self, Toggle)
+    
+    -- Set default values
+    self.Text = config.Text or "Toggle"
+    self.TextColor = config.TextColor or Color3.fromRGB(255, 255, 255)
+    self.BackgroundColor = config.BackgroundColor or Color3.fromRGB(50, 50, 50)
+    self.ActiveColor = config.ActiveColor or Color3.fromRGB(100, 200, 100)
+    self.InactiveColor = config.InactiveColor or Color3.fromRGB(200, 100, 100)
+    self.BorderColor = config.BorderColor or Color3.fromRGB(100, 100, 100)
+    self.CornerRadius = config.CornerRadius or UDim.new(0, 12)
+    self.Font = config.Font or Enum.Font.Gotham
+    self.TextSize = config.TextSize or 14
+    self.State = config.DefaultState or false
+    self.Callback = config.Callback
+    self.Flag = config.Flag
+    
+    local success, result = pcall(function()
+        local frame = Instance.new("Frame")
+        frame.Name = self.Name
+        frame.Size = config.Size or UDim2.new(0, 200, 0, 30)
+        frame.Position = config.Position or UDim2.new(0, 0, 0, 0)
+        frame.BackgroundTransparency = 1
+        frame.Parent = config.Parent
+        
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Name = "TextLabel"
+        textLabel.Size = UDim2.new(1, -60, 1, 0)
+        textLabel.Position = UDim2.new(0, 0, 0, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = self.Text
+        textLabel.TextColor3 = self.TextColor
+        textLabel.Font = self.Font
+        textLabel.TextSize = self.TextSize
+        textLabel.TextXAlignment = Enum.TextXAlignment.Left
+        textLabel.Parent = frame
+        
+        local toggleBg = Instance.new("Frame")
+        toggleBg.Name = "ToggleBackground"
+        toggleBg.Size = UDim2.new(0, 50, 0, 24)
+        toggleBg.Position = UDim2.new(1, -50, 0.5, -12)
+        toggleBg.BackgroundColor3 = self.BackgroundColor
+        toggleBg.Parent = frame
+        
+        local toggleCorner = Instance.new("UICorner")
+        toggleCorner.CornerRadius = self.CornerRadius
+        toggleCorner.Parent = toggleBg
+        
+        local toggleSlider = Instance.new("Frame")
+        toggleSlider.Name = "ToggleSlider"
+        toggleSlider.Size = UDim2.new(0, 20, 0, 20)
+        toggleSlider.Position = UDim2.new(0, 2, 0.5, -10)
+        toggleSlider.BackgroundColor3 = self.State and self.ActiveColor or self.InactiveColor
+        toggleSlider.Parent = toggleBg
+        
+        local sliderCorner = Instance.new("UICorner")
+        sliderCorner.CornerRadius = UDim.new(0, 10)
+        sliderCorner.Parent = toggleSlider
+        
+        local clickDetector = Instance.new("TextButton")
+        clickDetector.Name = "ClickDetector"
+        clickDetector.Size = UDim2.new(1, 0, 1, 0)
+        clickDetector.Position = UDim2.new(0, 0, 0, 0)
+        clickDetector.BackgroundTransparency = 1
+        clickDetector.Text = ""
+        clickDetector.Parent = frame
+        
+        self.Instance = frame
+        self.ToggleBackground = toggleBg
+        self.ToggleSlider = toggleSlider
+        self.TextLabel = textLabel
+        self.ClickDetector = clickDetector
+        
+        self:_setupClickHandling()
+        
+        self:_updateVisualState()
+    end)
+    
+    if not success then
+        error("Toggle: Failed to create toggle instance: " .. tostring(result))
+    end
+    
+    return self
+end
+
+function Toggle:_setupClickHandling()
+    if not self.ClickDetector then return end
+    
+    self:Connect("Activated", function()
+        self:Toggle()
+    end)
+end
+
+function Toggle:_updateVisualState()
+    if not self.ToggleSlider then return end
+    
+    local success, result = pcall(function()
+        local targetPosition = self.State and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+        local targetColor = self.State and self.ActiveColor or self.InactiveColor
+        
+        local tween = TweenService:Create(
+            self.ToggleSlider,
+            TweenInfo.new(DEFAULT_ANIMATION_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {
+                Position = targetPosition,
+                BackgroundColor3 = targetColor
+            }
+        )
+        tween:Play()
+    end)
+    
+    if not success then
+        warn("Toggle: Failed to update visual state:", result)
+    end
+end
+
+function Toggle:SetText(text: string): boolean
+    if not text or type(text) ~= "string" then
+        warn("Toggle: Invalid text provided")
+        return false
+    end
+    
+    local success, result = pcall(function()
+        self.Text = text
+        if self.TextLabel then
+            self.TextLabel.Text = text
+        end
+    end)
+    
+    if not success then
+        warn("Toggle: Failed to set text:", result)
+        return false
+    end
+    
+    return true
+end
+
+function Toggle:SetState(state: boolean): boolean
+    if type(state) ~= "boolean" then
+        warn("Toggle: State must be a boolean")
+        return false
+    end
+    
+    if self.State == state then
+        return true
+    end
+    
+    local success, result = pcall(function()
+        self.State = state
+        self:_updateVisualState()
+        
+        if self.Callback then
+            local callbackSuccess, callbackResult = pcall(self.Callback, state)
+            if not callbackSuccess then
+                warn("Toggle: Callback failed:", callbackResult)
+            end
+        end
+    end)
+    
+    if not success then
+        warn("Toggle: Failed to set state:", result)
+        return false
+    end
+    
+    return true
+end
+
+function Toggle:Toggle(): boolean
+    return self:SetState(not self.State)
+end
+
+function Toggle:SetCallback(callback: (boolean) -> ()): boolean
+    if callback and type(callback) ~= "function" then
+        warn("Toggle: Callback must be a function")
+        return false
+    end
+    
+    self.Callback = callback
+    return true
+end
+
+function Toggle:GetState(): boolean
+    return self.State
+end
+
+return Toggle

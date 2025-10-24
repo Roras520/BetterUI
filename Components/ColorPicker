@@ -1,0 +1,590 @@
+local BaseComponent = loadstring(game:HttpGet(githubDirectory("BaseComponent")))()
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local ColorPicker = {}
+ColorPicker.__index = ColorPicker
+setmetatable(ColorPicker, BaseComponent)
+
+export type ColorPickerConfig = {
+    Name: string,
+    Parent: Instance?,
+    Position: UDim2?,
+    Size: UDim2?,
+    Text: string?,
+    TextColor: Color3?,
+    BackgroundColor: Color3?,
+    BorderColor: Color3?,
+    CornerRadius: UDim?,
+    Font: Enum.Font?,
+    TextSize: number?,
+    DefaultColor: Color3?,
+    Callback: ((Color3) -> ())?,
+    Flag: string?,
+}
+
+export type ColorPicker = BaseComponent.Component & {
+    Text: string,
+    TextColor: Color3,
+    BackgroundColor: Color3,
+    BorderColor: Color3,
+    CornerRadius: UDim,
+    Font: Enum.Font,
+    TextSize: number,
+    SelectedColor: Color3,
+    Callback: ((Color3) -> ())?,
+    Flag: string?,
+    IsOpen: boolean,
+    
+    new: (config: ColorPickerConfig) -> ColorPicker,
+    SetText: (self: ColorPicker, text: string) -> boolean,
+    SetColor: (self: ColorPicker, color: Color3) -> boolean,
+    SetCallback: (self: ColorPicker, callback: (Color3) -> ()) -> boolean,
+    GetColor: (self: ColorPicker) -> Color3,
+    Toggle: (self: ColorPicker) -> boolean,
+    Close: (self: ColorPicker) -> boolean,
+    Open: (self: ColorPicker) -> boolean,
+}
+
+-- Constants
+local DEFAULT_ANIMATION_SPEED = 0.2
+local PICKER_SIZE = 200
+local HUE_BAR_WIDTH = 20
+local SATURATION_SIZE = 180
+
+-- Constructor
+function ColorPicker.new(config: ColorPickerConfig): ColorPicker
+    if not config or type(config) ~= "table" then
+        error("ColorPicker: Invalid config provided")
+    end
+    
+    local self = BaseComponent.new(config)
+    setmetatable(self, ColorPicker)
+    
+    self.Text = config.Text or "Color Picker"
+    self.TextColor = config.TextColor or Color3.fromRGB(255, 255, 255)
+    self.BackgroundColor = config.BackgroundColor or Color3.fromRGB(50, 50, 50)
+    self.BorderColor = config.BorderColor or Color3.fromRGB(100, 100, 100)
+    self.CornerRadius = config.CornerRadius or UDim.new(0, 6)
+    self.Font = config.Font or Enum.Font.Gotham
+    self.TextSize = config.TextSize or 14
+    self.SelectedColor = config.DefaultColor or Color3.fromRGB(255, 0, 0)
+    self.Callback = config.Callback
+    self.Flag = config.Flag
+    self.IsOpen = false
+    
+    local success, result = pcall(function()
+        local frame = Instance.new("Frame")
+        frame.Name = self.Name
+        frame.Size = config.Size or UDim2.new(0, 200, 0, 30)
+        frame.Position = config.Position or UDim2.new(0, 0, 0, 0)
+        frame.BackgroundTransparency = 1
+        frame.ClipsDescendants = true
+        frame.Parent = config.Parent
+        
+        local button = Instance.new("TextButton")
+        button.Name = "Button"
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Position = UDim2.new(0, 0, 0, 0)
+        button.BackgroundColor3 = self.BackgroundColor
+        button.TextColor3 = self.TextColor
+        button.Text = self.Text
+        button.Font = self.Font
+        button.TextSize = self.TextSize
+        button.TextXAlignment = Enum.TextXAlignment.Left
+        button.AutoButtonColor = false
+        button.Parent = frame
+        
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = self.CornerRadius
+        buttonCorner.Parent = button
+        
+        local buttonBorder = Instance.new("UIStroke")
+        buttonBorder.Color = self.BorderColor
+        buttonBorder.Thickness = 1
+        buttonBorder.Parent = button
+        
+        local colorPreview = Instance.new("Frame")
+        colorPreview.Name = "ColorPreview"
+        colorPreview.Size = UDim2.new(0, 20, 0, 20)
+        colorPreview.Position = UDim2.new(1, -25, 0.5, -10)
+        colorPreview.BackgroundColor3 = self.SelectedColor
+        colorPreview.Parent = button
+        
+        local previewCorner = Instance.new("UICorner")
+        previewCorner.CornerRadius = UDim.new(0, 3)
+        previewCorner.Parent = colorPreview
+        
+        local pickerFrame = Instance.new("Frame")
+        pickerFrame.Name = "PickerFrame"
+        pickerFrame.Size = UDim2.new(0, PICKER_SIZE + HUE_BAR_WIDTH + 10, 0, PICKER_SIZE + 40)
+        pickerFrame.Position = UDim2.new(0, 0, 0, 30)
+        pickerFrame.BackgroundColor3 = self.BackgroundColor
+        pickerFrame.Parent = frame
+        
+        local pickerCorner = Instance.new("UICorner")
+        pickerCorner.CornerRadius = self.CornerRadius
+        pickerCorner.Parent = pickerFrame
+        
+        local pickerBorder = Instance.new("UIStroke")
+        pickerBorder.Color = self.BorderColor
+        pickerBorder.Thickness = 1
+        pickerBorder.Parent = pickerFrame
+        
+        local saturationFrame = Instance.new("Frame")
+        saturationFrame.Name = "SaturationFrame"
+        saturationFrame.Size = UDim2.new(0, SATURATION_SIZE, 0, SATURATION_SIZE)
+        saturationFrame.Position = UDim2.new(0, 5, 0, 5)
+        saturationFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        saturationFrame.Parent = pickerFrame
+        
+        local saturationCorner = Instance.new("UICorner")
+        saturationCorner.CornerRadius = UDim.new(0, 3)
+        saturationCorner.Parent = saturationFrame
+        
+        local saturationGradient = Instance.new("UIGradient")
+        saturationGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+        }
+        saturationGradient.Parent = saturationFrame
+        
+        local lightnessGradient = Instance.new("UIGradient")
+        lightnessGradient.Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0, 0),
+            NumberSequenceKeypoint.new(1, 1)
+        }
+        lightnessGradient.Rotation = 90
+        lightnessGradient.Parent = saturationFrame
+        
+        local slHandle = Instance.new("Frame")
+        slHandle.Name = "SLHandle"
+        slHandle.Size = UDim2.new(0, 8, 0, 8)
+        slHandle.Position = UDim2.new(0, 0, 0, 0)
+        slHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        slHandle.Parent = saturationFrame
+        
+        local slHandleCorner = Instance.new("UICorner")
+        slHandleCorner.CornerRadius = UDim.new(0, 4)
+        slHandleCorner.Parent = slHandle
+        
+        local slHandleBorder = Instance.new("UIStroke")
+        slHandleBorder.Color = Color3.fromRGB(0, 0, 0)
+        slHandleBorder.Thickness = 2
+        slHandleBorder.Parent = slHandle
+        
+        local hueFrame = Instance.new("Frame")
+        hueFrame.Name = "HueFrame"
+        hueFrame.Size = UDim2.new(0, HUE_BAR_WIDTH, 0, SATURATION_SIZE)
+        hueFrame.Position = UDim2.new(0, SATURATION_SIZE + 10, 0, 5)
+        hueFrame.Parent = pickerFrame
+        
+        local hueCorner = Instance.new("UICorner")
+        hueCorner.CornerRadius = UDim.new(0, 3)
+        hueCorner.Parent = hueFrame
+        
+        local hueGradient = Instance.new("UIGradient")
+        hueGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+            ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+            ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+            ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+            ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+        }
+        hueGradient.Parent = hueFrame
+        
+        local hueHandle = Instance.new("Frame")
+        hueHandle.Name = "HueHandle"
+        hueHandle.Size = UDim2.new(1, 0, 0, 3)
+        hueHandle.Position = UDim2.new(0, 0, 0, 0)
+        hueHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        hueHandle.Parent = hueFrame
+        
+        local hueHandleCorner = Instance.new("UICorner")
+        hueHandleCorner.CornerRadius = UDim.new(0, 1)
+        hueHandleCorner.Parent = hueHandle
+        
+        local hueHandleBorder = Instance.new("UIStroke")
+        hueHandleBorder.Color = Color3.fromRGB(0, 0, 0)
+        hueHandleBorder.Thickness = 1
+        hueHandleBorder.Parent = hueHandle
+        
+        local rgbFrame = Instance.new("Frame")
+        rgbFrame.Name = "RGBFrame"
+        rgbFrame.Size = UDim2.new(1, -10, 0, 25)
+        rgbFrame.Position = UDim2.new(0, 5, 1, -30)
+        rgbFrame.BackgroundTransparency = 1
+        rgbFrame.Parent = pickerFrame
+        
+        local rgbLayout = Instance.new("UIListLayout")
+        rgbLayout.FillDirection = Enum.FillDirection.Horizontal
+        rgbLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        rgbLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+        rgbLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        rgbLayout.Padding = UDim.new(0, 5)
+        rgbLayout.Parent = rgbFrame
+        
+        local rgbInputs = {}
+        local rgbLabels = {"R", "G", "B"}
+        for i, label in ipairs(rgbLabels) do
+            local inputFrame = Instance.new("Frame")
+            inputFrame.Name = label .. "Input"
+            inputFrame.Size = UDim2.new(0, 50, 1, 0)
+            inputFrame.BackgroundTransparency = 1
+            inputFrame.Parent = rgbFrame
+            
+            local inputLabel = Instance.new("TextLabel")
+            inputLabel.Name = "Label"
+            inputLabel.Size = UDim2.new(0, 15, 1, 0)
+            inputLabel.Position = UDim2.new(0, 0, 0, 0)
+            inputLabel.BackgroundTransparency = 1
+            inputLabel.Text = label
+            inputLabel.TextColor3 = self.TextColor
+            inputLabel.Font = self.Font
+            inputLabel.TextSize = 12
+            inputLabel.TextXAlignment = Enum.TextXAlignment.Center
+            inputLabel.Parent = inputFrame
+            
+            local inputBox = Instance.new("TextBox")
+            inputBox.Name = "Input"
+            inputBox.Size = UDim2.new(1, -20, 1, 0)
+            inputBox.Position = UDim2.new(0, 15, 0, 0)
+            inputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            inputBox.TextColor3 = self.TextColor
+            inputBox.Text = "0"
+            inputBox.Font = self.Font
+            inputBox.TextSize = 12
+            inputBox.TextXAlignment = Enum.TextXAlignment.Center
+            inputBox.Parent = inputFrame
+            
+            local inputCorner = Instance.new("UICorner")
+            inputCorner.CornerRadius = UDim.new(0, 3)
+            inputCorner.Parent = inputBox
+            
+            rgbInputs[label] = inputBox
+        end
+        
+        self.Instance = frame
+        self.Button = button
+        self.ColorPreview = colorPreview
+        self.PickerFrame = pickerFrame
+        self.SaturationFrame = saturationFrame
+        self.SLHandle = slHandle
+        self.HueFrame = hueFrame
+        self.HueHandle = hueHandle
+        self.RGBInputs = rgbInputs
+        
+        self:_setupInteractionHandling()
+        
+        self:_updateFromColor(self.SelectedColor)
+    end)
+    
+    if not success then
+        error("ColorPicker: Failed to create color picker instance: " .. tostring(result))
+    end
+    
+    return self
+end
+
+function ColorPicker:_setupInteractionHandling()
+    if not self.Button then return end
+    
+    self:Connect("Activated", function()
+        self:Toggle()
+    end)
+    
+    if self.SaturationFrame then
+        self:Connect("MouseButton1Down", function()
+            self:_updateFromMouse()
+        end)
+        
+        self:Connect("MouseMoved", function()
+            if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                self:_updateFromMouse()
+            end
+        end)
+    end
+    
+    if self.HueFrame then
+        self:Connect("MouseButton1Down", function()
+            self:_updateFromHueMouse()
+        end)
+        
+        self:Connect("MouseMoved", function()
+            if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                self:_updateFromHueMouse()
+            end
+        end)
+    end
+    
+    for label, inputBox in pairs(self.RGBInputs) do
+        inputBox.FocusLost:Connect(function()
+            self:_updateFromRGB()
+        end)
+    end
+end
+
+function ColorPicker:_updateFromMouse()
+    if not self.SaturationFrame then return end
+    
+    local success, result = pcall(function()
+        local mouseX = UserInputService:GetMouseLocation().X
+        local mouseY = UserInputService:GetMouseLocation().Y
+        local frameAbsolutePosition = self.SaturationFrame.AbsolutePosition
+        local frameAbsoluteSize = self.SaturationFrame.AbsoluteSize
+        
+        local relativeX = math.clamp(mouseX - frameAbsolutePosition.X, 0, frameAbsoluteSize.X)
+        local relativeY = math.clamp(mouseY - frameAbsolutePosition.Y, 0, frameAbsoluteSize.Y)
+        
+        local saturation = relativeX / frameAbsoluteSize.X
+        local lightness = 1 - (relativeY / frameAbsoluteSize.Y)
+        
+        local hue = self:_getHueFromHandle()
+        local newColor = Color3.fromHSV(hue, saturation, lightness)
+        
+        self:SetColor(newColor)
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update from mouse:", result)
+    end
+end
+
+function ColorPicker:_updateFromHueMouse()
+    if not self.HueFrame then return end
+    
+    local success, result = pcall(function()
+        local mouseY = UserInputService:GetMouseLocation().Y
+        local frameAbsolutePosition = self.HueFrame.AbsolutePosition
+        local frameAbsoluteSize = self.HueFrame.AbsoluteSize
+        
+        local relativeY = math.clamp(mouseY - frameAbsolutePosition.Y, 0, frameAbsoluteSize.Y)
+        local hue = relativeY / frameAbsoluteSize.Y
+        
+        self:_setHueHandle(hue)
+        self:_updateSaturationFrame(hue)
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update from hue mouse:", result)
+    end
+end
+
+function ColorPicker:_updateFromRGB()
+    if not self.RGBInputs then return end
+    
+    local success, result = pcall(function()
+        local r = tonumber(self.RGBInputs.R.Text) or 0
+        local g = tonumber(self.RGBInputs.G.Text) or 0
+        local b = tonumber(self.RGBInputs.B.Text) or 0
+        
+        r = math.clamp(r, 0, 255)
+        g = math.clamp(g, 0, 255)
+        b = math.clamp(b, 0, 255)
+        
+        local newColor = Color3.fromRGB(r, g, b)
+        self:SetColor(newColor)
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update from RGB:", result)
+    end
+end
+
+function ColorPicker:_getHueFromHandle(): number
+    if not self.HueHandle then return 0 end
+    
+    local hueFrameSize = self.HueFrame.AbsoluteSize.Y
+    local handlePosition = self.HueHandle.Position.Y.Scale
+    return handlePosition
+end
+
+function ColorPicker:_setHueHandle(hue: number)
+    if not self.HueHandle then return end
+    
+    local success, result = pcall(function()
+        self.HueHandle.Position = UDim2.new(0, 0, hue, 0)
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to set hue handle:", result)
+    end
+end
+
+function ColorPicker:_updateSaturationFrame(hue: number)
+    if not self.SaturationFrame then return end
+    
+    local success, result = pcall(function()
+        local hueColor = Color3.fromHSV(hue, 1, 1)
+        self.SaturationFrame.BackgroundColor3 = hueColor
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update saturation frame:", result)
+    end
+end
+
+function ColorPicker:_updateFromColor(color: Color3)
+    if not color then return end
+    
+    local success, result = pcall(function()
+        local h, s, v = color:ToHSV()
+        
+        self:_setHueHandle(h)
+        
+        self:_updateSaturationFrame(h)
+        
+        if self.SLHandle then
+            local saturationFrameSize = self.SaturationFrame.AbsoluteSize
+            local handleX = s * saturationFrameSize.X
+            local handleY = (1 - v) * saturationFrameSize.Y
+            
+            self.SLHandle.Position = UDim2.new(0, handleX - 4, 0, handleY - 4)
+        end
+        
+        if self.RGBInputs then
+            local r, g, b = math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)
+            self.RGBInputs.R.Text = tostring(r)
+            self.RGBInputs.G.Text = tostring(g)
+            self.RGBInputs.B.Text = tostring(b)
+        end
+        
+        if self.ColorPreview then
+            self.ColorPreview.BackgroundColor3 = color
+        end
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update from color:", result)
+    end
+end
+
+function ColorPicker:_updateVisualState()
+    if not self.PickerFrame then return end
+    
+    local success, result = pcall(function()
+        local targetSize = self.IsOpen and UDim2.new(0, PICKER_SIZE + HUE_BAR_WIDTH + 10, 0, PICKER_SIZE + 40) or UDim2.new(0, 0, 0, 0)
+        
+        local frameTween = TweenService:Create(
+            self.PickerFrame,
+            TweenInfo.new(DEFAULT_ANIMATION_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = targetSize}
+        )
+        frameTween:Play()
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to update visual state:", result)
+    end
+end
+
+function ColorPicker:SetText(text: string): boolean
+    if not text or type(text) ~= "string" then
+        warn("ColorPicker: Invalid text provided")
+        return false
+    end
+    
+    local success, result = pcall(function()
+        self.Text = text
+        if self.Button then
+            self.Button.Text = text
+        end
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to set text:", result)
+        return false
+    end
+    
+    return true
+end
+
+function ColorPicker:SetColor(color: Color3): boolean
+    if not color or typeof(color) ~= "Color3" then
+        warn("ColorPicker: Invalid color provided")
+        return false
+    end
+    
+    local success, result = pcall(function()
+        local oldColor = self.SelectedColor
+        self.SelectedColor = color
+        
+        self:_updateFromColor(color)
+        
+        if self.SelectedColor ~= oldColor and self.Callback then
+            local callbackSuccess, callbackResult = pcall(self.Callback, color)
+            if not callbackSuccess then
+                warn("ColorPicker: Callback failed:", callbackResult)
+            end
+        end
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to set color:", result)
+        return false
+    end
+    
+    return true
+end
+
+function ColorPicker:SetCallback(callback: (Color3) -> ()): boolean
+    if callback and type(callback) ~= "function" then
+        warn("ColorPicker: Callback must be a function")
+        return false
+    end
+    
+    self.Callback = callback
+    return true
+end
+
+function ColorPicker:GetColor(): Color3
+    return self.SelectedColor
+end
+
+function ColorPicker:Toggle(): boolean
+    if self.IsOpen then
+        return self:Close()
+    else
+        return self:Open()
+    end
+end
+
+function ColorPicker:Close(): boolean
+    if not self.IsOpen then
+        return true
+    end
+    
+    local success, result = pcall(function()
+        self.IsOpen = false
+        self:_updateVisualState()
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to close:", result)
+        return false
+    end
+    
+    return true
+end
+
+function ColorPicker:Open(): boolean
+    if self.IsOpen then
+        return true
+    end
+    
+    local success, result = pcall(function()
+        self.IsOpen = true
+        self:_updateVisualState()
+    end)
+    
+    if not success then
+        warn("ColorPicker: Failed to open:", result)
+        return false
+    end
+    
+    return true
+end
+
+return ColorPicker

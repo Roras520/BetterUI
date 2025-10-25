@@ -1,7 +1,7 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.0.3
+    Build 1.0.4
     Date: 2025-10-25
     Changelogs:
     - Nothing yet.
@@ -518,11 +518,14 @@ notificationsScreenGui.ResetOnSpawn = false
 local BlurredGui = nil
 if not _G.AcrylicBlurLoaded then
     BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
+    _G.AcrylicBlur = BlurredGui
     _G.AcrylicBlurLoaded = true
+else
+    BlurredGui = _G.AcrylicBlur
 end
 
 local notificationCount = 0
-local acylicInstances = {}
+local acrylicBlurInstances = {}
 
 Vynixus.SetTheme = SetTheme
 
@@ -533,13 +536,13 @@ Vynixus.ShowNotification = function(title, message, notificationType)
                 notif:Destroy()
             end
         end
-        for _, instance in ipairs(acylicInstances) do
+        for _, instance in ipairs(acrylicBlurInstances) do
             if instance.Instance then
                 instance.Instance:Destroy()
             end
         end
         notifications = {}
-        acylicInstances = {}
+        acrylicBlurInstances = {}
     end
     notificationCount = notificationCount + 1
     if notificationCount > 4 then
@@ -563,7 +566,7 @@ Vynixus.ShowNotification = function(title, message, notificationType)
     if BlurredGui then
         local acrylicBlurInstance = BlurredGui.new(frame, "Rectangle")
         acrylicBlurInstance:SetIntensity(0.5)
-        table.insert(acylicInstances, {
+        table.insert(acrylicBlurInstances, {
             Instance = acrylicBlurInstance,
             Index = notificationCount
         })
@@ -623,10 +626,10 @@ Vynixus.ShowNotification = function(title, message, notificationType)
                 break
             end
         end
-        for i, instance in ipairs(acylicInstances) do
+        for i, instance in ipairs(acrylicBlurInstances) do
             if instance.Index == notificationCount then
                 instance.Instance:Destroy()
-                table.remove(acylicInstances, i)
+                table.remove(acrylicBlurInstances, i)
                 break
             end
         end
@@ -707,6 +710,7 @@ Vynixus.CreateWindow = function(config)
     window.selectedTab = 0
     window.searchEnabled = config.SearchEnabled or false
     window.searchElements = {}
+    window.Theme = config.Theme or "Default"
     
     local screenGui = Instance.new("ScreenGui", CoreGui)
     screenGui.Name = "BetterUI"
@@ -2210,9 +2214,12 @@ Vynixus.CreateWindow = function(config)
     
     activeWindow = window
     
-    if config.Theme then
-        SetTheme(config.Theme)
-    end
+    task.spawn(function()
+        task.wait(5)
+        if config.Theme then
+            SetTheme(config.Theme)
+        end
+    end)
     
     local cleanupConnection = RunService.Heartbeat:Connect(function()
         if not screenGui.Parent then

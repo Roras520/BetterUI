@@ -1,7 +1,7 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.0.4
+    Build 1.0.3
     Date: 2025-10-25
     Changelogs:
     - Nothing yet.
@@ -1976,6 +1976,7 @@ Vynixus.CreateWindow = function(config)
                     size = UDim2.new(1, 0, 0, 30),
                     transparency = 1
                 })
+                createCorner(sliderFrame, 4)
                 
                 local sliderLabel = createStyledEl("TextLabel", sliderFrame, {
                     text = colorName,
@@ -2007,6 +2008,7 @@ Vynixus.CreateWindow = function(config)
                 sliderValue.AnchorPoint = Vector2.new(1, 0)
                 sliderValue.ClearTextOnFocus = false
                 sliderValue.TextEditable = true
+                createCorner(sliderValue, 4)
                 
                 local sliderBar = createStyledEl("Frame", sliderFrame, {
                     size = UDim2.new(1, 0, 0, 6),
@@ -2020,6 +2022,7 @@ Vynixus.CreateWindow = function(config)
                     cornerRadius = 1,
                     name = "sliderBar"
                 })
+                createCorner(sliderBar, 1)
                 
                 local sliderFill = createStyledEl("Frame", sliderBar, {
                     size = UDim2.new(initialValue / 255, 0, 1, 0),
@@ -2031,6 +2034,7 @@ Vynixus.CreateWindow = function(config)
                         themeProperty = "Accent"
                     }
                 })
+                createCorner(sliderFill, 1)
                 
                 local sliderKnob = createStyledEl("Frame", sliderBar, {
                     size = UDim2.fromOffset(14, 14),
@@ -2044,11 +2048,7 @@ Vynixus.CreateWindow = function(config)
                     }
                 })
                 sliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
-                
-                createStroke(sliderKnob, currentThemeData.ElementBorder, 0.3, 2)
-                createCorner(sliderFill, 1)
-                createCorner(sliderBar, 1)
-                createCorner(sliderValue, 1)
+                createCorner(sliderKnob, 1)
                 
                 local sliderButton = createStyledEl("TextButton", sliderBar, {
                     size = UDim2.new(1, 0, 1, 0),

@@ -1,7 +1,7 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.0.0
+    Build 1.0.3
     Date: 2025-10-25
     Changelogs:
     - Nothing yet.
@@ -523,6 +523,8 @@ end
 
 local notificationCount = 0
 local acylicInstances = {}
+
+Vynixus.SetTheme = SetTheme
 
 Vynixus.ShowNotification = function(title, message, notificationType)
     if #notifications >= 4 then

@@ -708,10 +708,6 @@ Vynixus.CreateWindow = function(config)
     window.searchEnabled = config.SearchEnabled or false
     window.searchElements = {}
     
-    if config.Theme then
-        SetTheme(config.Theme)
-    end
-    
     local screenGui = Instance.new("ScreenGui", CoreGui)
     screenGui.Name = "BetterUI"
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -2213,6 +2209,10 @@ Vynixus.CreateWindow = function(config)
     tweenProperty(mainFrame, "Size", windowSize, 0.5)
     
     activeWindow = window
+    
+    if config.Theme then
+        SetTheme(config.Theme)
+    end
     
     local cleanupConnection = RunService.Heartbeat:Connect(function()
         if not screenGui.Parent then

@@ -2235,7 +2235,4 @@ Vynixus.CreateWindow = function(config)
     return window
 end
 
-Vynixus.ShowNotification("Vynixus", "Loaded Vynixus library", "success")
-Vynixus.ShowNotification("Testing Notifications", "Test description", "success")
-
 return Vynixus

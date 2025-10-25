@@ -1,100 +1,58 @@
 --[[
-    BetterUI Library
-    Version: 2.0.0
-    Author: Me and my buddy Claude
+    Better UI library
+    Created by Stacm/Stack
+    Build 1.0.0
+    Date: 2025-10-25
+    Changelogs:
+    - Nothing yet.
 ]]
 
--- Services
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local TextService = game:GetService("TextService")
-
--- Import components
-function githubDirectory(string)
-    return "https://raw.githubusercontent.com/Roras520/BetterUI/refs/heads/main/" .. string
+if VYNIXUS_LOADED then
+    for _, gui in pairs(CoreGui:GetChildren()) do
+        if gui.Name == "BetterUI" or gui.Name == "BetterUILoading" or gui.Name == "Notifications" then
+            gui:Destroy()
+        end
+    end
+    if _G["Vynixus"] and _G["Vynixus"].ScreenGui and _G["Vynixus"].ScreenGui.Parent then
+        _G["Vynixus"].ScreenGui:Destroy()
+    end
+    _G["Vynixus"] = nil
+    VYNIXUS_LOADED = false
 end
-local BaseComponent = loadstring(game:HttpGet(githubDirectory("BaseComponent")))()
-local Button = loadstring(game:HttpGet(githubDirectory("Components/Button")))()
-local Toggle = loadstring(game:HttpGet(githubDirectory("Components/Toggle")))()
-local Slider = loadstring(game:HttpGet(githubDirectory("Components/Slider")))()
-local Dropdown = loadstring(game:HttpGet(githubDirectory("Components/Dropdown")))()
-local ColorPicker = loadstring(game:HttpGet(githubDirectory("Components/ColorPicker")))()
 
--- Main library
-local BetterUI = {}
-BetterUI.__index = BetterUI
+VYNIXUS_LOADED = true
+if not game:IsLoaded() then game.Loaded:Wait() end
 
--- Constants
-local ANIMATION_SPEED = 0.2
-local HOVER_CHANGE = 0.07
-local DEFAULT_EASING = Enum.EasingStyle.Exponential
-local DEFAULT_EASING_DIRECTION = Enum.EasingDirection.Out
+local Vynixus = {}
+_G["Vynixus"] = Vynixus
 
--- Private state
-local _instance = nil
-local _activeWindow = nil
-local _cleanupConnections = {}
-local _themeObjects = {}
-local _flags = {}
-local _configs = {}
-local _notifications = {}
+Services = setmetatable({}, {
+    __index = function(self, name)
+        local success, cache = pcall(function()
+            return game:GetService(name)
+        end)
+        if success then
+            rawset(self, name, cache)
+            return cache
+        else
+            error("Invalid Service: " .. tostring(name))
+        end
+    end
+})
 
--- Type definitions
-export type Theme = {
-    Accent: Color3,
-    ElementColor: Color3,
-    ElementBorder: Color3,
-    TextColor: Color3,
-    SubTextColor: Color3,
-    SectionBG: Color3,
-    MainBG: Color3,
-    TitleBarLine: Color3,
-    TabUnselected: Color3,
-    SectionBorder: Color3,
-}
+TweenService = Services.TweenService
+UserInputService = Services.UserInputService
+Players = Services.Players
+RunService = Services.RunService
+CoreGui = Services.CoreGui
+HttpService = Services.HttpService
+TeleportService = Services.TeleportService
+TextService = Services.TextService
 
-export type WindowConfig = {
-    Title: string,
-    Size: Vector2,
-    Position: Vector2?,
-    Resizable: boolean?,
-    Minimizable: boolean?,
-    Closable: boolean?,
-}
+Player = Players.LocalPlayer
+PlaceId = game.PlaceId
 
-export type NotificationConfig = {
-    Title: string,
-    Message: string,
-    Type: "success" | "error" | "warning" | "info",
-    Duration: number?,
-}
-
-export type SectionConfig = {
-    Name: string,
-    Parent: Instance?,
-    Position: UDim2?,
-    Size: UDim2?,
-    Text: string?,
-    Collapsible: boolean?,
-    DefaultCollapsed: boolean?,
-}
-
-export type TabConfig = {
-    Name: string,
-    Parent: Instance?,
-    Position: UDim2?,
-    Size: UDim2?,
-    Text: string?,
-    Icon: string?,
-}
-
--- Built-in themes
-local THEMES: {[string]: Theme} = {
+THEMES = {
     Default = {
         Accent = Color3.fromRGB(86, 195, 245),
         ElementColor = Color3.fromRGB(110, 110, 110),
@@ -175,412 +133,1362 @@ local THEMES: {[string]: Theme} = {
         SubTextColor = Color3.fromRGB(130, 130, 130),
         SectionBG = Color3.fromRGB(15, 15, 15),
         MainBG = Color3.fromRGB(10, 10, 10),
-        TitleBarLine = Color3.fromRGB(40, 40, 40),
+        TitleBarLine = Color3.fromRGB(35, 35, 35),
         TabUnselected = Color3.fromRGB(50, 50, 50),
         SectionBorder = Color3.fromRGB(25, 25, 25),
     },
     Light = {
-        Accent = Color3.fromRGB(0, 120, 255),
-        ElementColor = Color3.fromRGB(200, 200, 200),
+        Accent = Color3.fromRGB(50, 150, 255),
+        ElementColor = Color3.fromRGB(220, 220, 220),
         ElementBorder = Color3.fromRGB(180, 180, 180),
         TextColor = Color3.fromRGB(30, 30, 30),
-        SubTextColor = Color3.fromRGB(80, 80, 80),
-        SectionBG = Color3.fromRGB(240, 240, 240),
+        SubTextColor = Color3.fromRGB(90, 90, 90),
+        SectionBG = Color3.fromRGB(245, 245, 245),
         MainBG = Color3.fromRGB(250, 250, 250),
         TitleBarLine = Color3.fromRGB(200, 200, 200),
-        TabUnselected = Color3.fromRGB(160, 160, 160),
-        SectionBorder = Color3.fromRGB(220, 220, 220),
+        TabUnselected = Color3.fromRGB(210, 210, 210),
+        SectionBorder = Color3.fromRGB(190, 190, 190),
     },
+    Ocean = {
+        Accent = Color3.fromRGB(30, 180, 255),
+        ElementColor = Color3.fromRGB(70, 100, 130),
+        ElementBorder = Color3.fromRGB(20, 40, 60),
+        TextColor = Color3.fromRGB(220, 235, 245),
+        SubTextColor = Color3.fromRGB(150, 175, 195),
+        SectionBG = Color3.fromRGB(25, 45, 65),
+        MainBG = Color3.fromRGB(18, 35, 52),
+        TitleBarLine = Color3.fromRGB(50, 70, 95),
+        TabUnselected = Color3.fromRGB(65, 85, 110),
+        SectionBorder = Color3.fromRGB(40, 60, 85),
+    },
+    Forest = {
+        Accent = Color3.fromRGB(100, 220, 120),
+        ElementColor = Color3.fromRGB(70, 100, 75),
+        ElementBorder = Color3.fromRGB(20, 35, 25),
+        TextColor = Color3.fromRGB(220, 240, 225),
+        SubTextColor = Color3.fromRGB(150, 180, 155),
+        SectionBG = Color3.fromRGB(25, 40, 30),
+        MainBG = Color3.fromRGB(18, 30, 22),
+        TitleBarLine = Color3.fromRGB(50, 70, 55),
+        TabUnselected = Color3.fromRGB(65, 90, 70),
+        SectionBorder = Color3.fromRGB(40, 60, 45),
+    },
+    Sunset = {
+        Accent = Color3.fromRGB(255, 150, 80),
+        ElementColor = Color3.fromRGB(120, 90, 80),
+        ElementBorder = Color3.fromRGB(40, 25, 20),
+        TextColor = Color3.fromRGB(245, 230, 220),
+        SubTextColor = Color3.fromRGB(190, 160, 150),
+        SectionBG = Color3.fromRGB(50, 35, 30),
+        MainBG = Color3.fromRGB(40, 28, 23),
+        TitleBarLine = Color3.fromRGB(80, 60, 50),
+        TabUnselected = Color3.fromRGB(100, 75, 65),
+        SectionBorder = Color3.fromRGB(65, 50, 45),
+    },
+    Cherry = {
+        Accent = Color3.fromRGB(255, 80, 120),
+        ElementColor = Color3.fromRGB(110, 75, 85),
+        ElementBorder = Color3.fromRGB(35, 20, 25),
+        TextColor = Color3.fromRGB(245, 220, 230),
+        SubTextColor = Color3.fromRGB(185, 150, 165),
+        SectionBG = Color3.fromRGB(40, 25, 30),
+        MainBG = Color3.fromRGB(30, 18, 23),
+        TitleBarLine = Color3.fromRGB(70, 50, 60),
+        TabUnselected = Color3.fromRGB(90, 65, 75),
+        SectionBorder = Color3.fromRGB(60, 40, 50),
+    },
+    Grape = {
+        Accent = Color3.fromRGB(180, 100, 255),
+        ElementColor = Color3.fromRGB(95, 75, 115),
+        ElementBorder = Color3.fromRGB(30, 20, 40),
+        TextColor = Color3.fromRGB(235, 220, 245),
+        SubTextColor = Color3.fromRGB(170, 145, 190),
+        SectionBG = Color3.fromRGB(35, 25, 50),
+        MainBG = Color3.fromRGB(25, 18, 38),
+        TitleBarLine = Color3.fromRGB(65, 50, 80),
+        TabUnselected = Color3.fromRGB(80, 60, 95),
+        SectionBorder = Color3.fromRGB(55, 40, 70),
+    },
+    Crimson = {
+        Accent = Color3.fromRGB(220, 50, 80),
+        ElementColor = Color3.fromRGB(100, 65, 75),
+        ElementBorder = Color3.fromRGB(30, 15, 20),
+        TextColor = Color3.fromRGB(240, 215, 220),
+        SubTextColor = Color3.fromRGB(180, 140, 150),
+        SectionBG = Color3.fromRGB(40, 20, 28),
+        MainBG = Color3.fromRGB(30, 15, 20),
+        TitleBarLine = Color3.fromRGB(70, 45, 55),
+        TabUnselected = Color3.fromRGB(85, 55, 65),
+        SectionBorder = Color3.fromRGB(60, 35, 45),
+    },
+    Emerald = {
+        Accent = Color3.fromRGB(80, 255, 150),
+        ElementColor = Color3.fromRGB(65, 105, 85),
+        ElementBorder = Color3.fromRGB(18, 35, 25),
+        TextColor = Color3.fromRGB(215, 245, 230),
+        SubTextColor = Color3.fromRGB(145, 185, 165),
+        SectionBG = Color3.fromRGB(22, 42, 32),
+        MainBG = Color3.fromRGB(15, 32, 23),
+        TitleBarLine = Color3.fromRGB(45, 75, 60),
+        TabUnselected = Color3.fromRGB(60, 95, 75),
+        SectionBorder = Color3.fromRGB(35, 65, 50),
+    },
+    Gold = {
+        Accent = Color3.fromRGB(255, 200, 50),
+        ElementColor = Color3.fromRGB(115, 100, 70),
+        ElementBorder = Color3.fromRGB(35, 30, 18),
+        TextColor = Color3.fromRGB(245, 235, 210),
+        SubTextColor = Color3.fromRGB(185, 170, 140),
+        SectionBG = Color3.fromRGB(45, 40, 25),
+        MainBG = Color3.fromRGB(35, 30, 18),
+        TitleBarLine = Color3.fromRGB(75, 65, 45),
+        TabUnselected = Color3.fromRGB(95, 85, 60),
+        SectionBorder = Color3.fromRGB(65, 55, 35),
+    }
 }
 
--- Utility functions
-local function validateTheme(theme: Theme): boolean
-    local requiredProperties = {
-        "Accent", "ElementColor", "ElementBorder", "TextColor", 
-        "SubTextColor", "SectionBG", "MainBG", "TitleBarLine", 
-        "TabUnselected", "SectionBorder"
-    }
-    
-    for _, property in ipairs(requiredProperties) do
-        if not theme[property] or typeof(theme[property]) ~= "Color3" then
-            return false
-        end
-    end
-    
-    return true
+currentTheme = "Default"
+flags = {}
+configs = {}
+notifications = {}
+activeWindow = nil
+cleanupConnections = {}
+themeObjects = {}
+
+-- Helper Functions
+function getCurrentTheme()
+    return THEMES[currentTheme] or THEMES.Default
 end
 
-local function safeCallback(callback: any, ...: any): (boolean, any)
-    if type(callback) ~= "function" then
-        return false, "Callback must be a function"
-    end
-    
-    local success, result = pcall(callback, ...)
-    if not success then
-        warn("BetterUI: Callback failed:", result)
-    end
-    
-    return success, result
-end
-
-local function createTween(
-    object: Instance, 
-    properties: {[string]: any}, 
-    duration: number?, 
-    easingStyle: Enum.EasingStyle?, 
-    easingDirection: Enum.EasingDirection?
-): Tween
-    duration = duration or ANIMATION_SPEED
-    easingStyle = easingStyle or DEFAULT_EASING
-    easingDirection = easingDirection or DEFAULT_EASING_DIRECTION
+function createTween(object, properties, duration, easingStyle, easingDirection)
+    duration = duration or 0.2
+    easingStyle = easingStyle or Enum.EasingStyle.Exponential
+    easingDirection = easingDirection or Enum.EasingDirection.Out
     
     local tweenInfo = TweenInfo.new(duration, easingStyle, easingDirection)
     return TweenService:Create(object, tweenInfo, properties)
 end
 
-local function registerThemeObject(object: Instance, property: string, themeProperty: string)
-    table.insert(_themeObjects, {
+function tweenProperty(object, property, value, duration, easingStyle, easingDirection)
+    local tween = createTween(object, {[property] = value}, duration, easingStyle, easingDirection)
+    tween:Play()
+    return tween
+end
+
+function createCorner(parent, radius)
+    local corner = Instance.new("UICorner", parent)
+    corner.CornerRadius = UDim.new(0, radius or 4)
+    return corner
+end
+
+function createStroke(parent, color, transparency, thickness)
+    local stroke = Instance.new("UIStroke", parent)
+    stroke.Color = color or getCurrentTheme().ElementBorder
+    stroke.Transparency = transparency or 0.5
+    stroke.Thickness = thickness or 1
+    return stroke
+end
+
+function createFrame(parent, size, position, backgroundColor, transparency, name)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = size or UDim2.new(1, 0, 1, 0)
+    frame.Position = position or UDim2.new(0, 0, 0, 0)
+    frame.BackgroundColor3 = backgroundColor or getCurrentTheme().ElementColor
+    frame.BackgroundTransparency = transparency or 0.87
+    frame.BorderSizePixel = 0
+    frame.Name = name or "Frame"
+    return frame
+end
+
+function createTextLabel(parent, text, size, position, font, textSize, textColor, textXAlignment, textYAlignment)
+    local label = Instance.new("TextLabel", parent)
+    label.Text = text or ""
+    label.Size = size or UDim2.new(1, 0, 0, 20)
+    label.Position = position or UDim2.new(0, 0, 0, 0)
+    label.Font = font or Enum.Font.Gotham
+    label.TextSize = textSize or 14
+    label.TextColor3 = textColor or getCurrentTheme().TextColor
+    label.TextXAlignment = textXAlignment or Enum.TextXAlignment.Left
+    label.TextYAlignment = textYAlignment or Enum.TextYAlignment.Center
+    label.BackgroundTransparency = 1
+    return label
+end
+
+function createTextButton(parent, text, size, position, font, textSize, textColor, backgroundColor, transparency)
+    local button = Instance.new("TextButton", parent)
+    button.Text = text or ""
+    button.Size = size or UDim2.new(1, 0, 0, 30)
+    button.Position = position or UDim2.new(0, 0, 0, 0)
+    button.Font = font or Enum.Font.Gotham
+    button.TextSize = textSize or 14
+    button.TextColor3 = textColor or getCurrentTheme().TextColor
+    button.BackgroundColor3 = backgroundColor or getCurrentTheme().ElementColor
+    button.BackgroundTransparency = transparency or 0.87
+    button.BorderSizePixel = 0
+    button.AutoButtonColor = false
+    return button
+end
+
+function createTextBox(parent, text, size, position, font, textSize, textColor, backgroundColor, transparency)
+    local textBox = Instance.new("TextBox", parent)
+    textBox.Text = text or ""
+    textBox.Size = size or UDim2.new(1, 0, 0, 20)
+    textBox.Position = position or UDim2.new(0, 0, 0, 0)
+    textBox.Font = font or Enum.Font.Gotham
+    textBox.TextSize = textSize or 14
+    textBox.TextColor3 = textColor or getCurrentTheme().TextColor
+    textBox.BackgroundColor3 = backgroundColor or getCurrentTheme().ElementColor
+    textBox.BackgroundTransparency = transparency or 0.87
+    textBox.BorderSizePixel = 0
+    textBox.ClearTextOnFocus = false
+    return textBox
+end
+
+function createScrollingFrame(parent, size, position, backgroundColor, transparency)
+    local scrollFrame = Instance.new("ScrollingFrame", parent)
+    scrollFrame.Size = size or UDim2.new(1, 0, 1, 0)
+    scrollFrame.Position = position or UDim2.new(0, 0, 0, 0)
+    scrollFrame.BackgroundColor3 = backgroundColor or getCurrentTheme().ElementColor
+    scrollFrame.BackgroundTransparency = transparency or 1
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 3
+    scrollFrame.CanvasSize = UDim2.fromScale(0, 0)
+    scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    return scrollFrame
+end
+
+function createImageLabel(parent, image, size, position, imageColor, transparency)
+    local imageLabel = Instance.new("ImageLabel", parent)
+    imageLabel.Image = image or ""
+    imageLabel.Size = size or UDim2.new(0, 20, 0, 20)
+    imageLabel.Position = position or UDim2.new(0, 0, 0, 0)
+    imageLabel.ImageColor3 = imageColor or Color3.new(1, 1, 1)
+    imageLabel.ImageTransparency = transparency or 0
+    imageLabel.BackgroundTransparency = 1
+    return imageLabel
+end
+
+function createListLayout(parent, padding, sortOrder, verticalAlignment, horizontalAlignment)
+    local listLayout = Instance.new("UIListLayout", parent)
+    listLayout.Padding = UDim.new(0, padding or 5)
+    listLayout.SortOrder = sortOrder or Enum.SortOrder.LayoutOrder
+    listLayout.VerticalAlignment = verticalAlignment or Enum.VerticalAlignment.Top
+    listLayout.HorizontalAlignment = horizontalAlignment or Enum.HorizontalAlignment.Left
+    return listLayout
+end
+
+function createPadding(parent, top, bottom, left, right)
+    local padding = Instance.new("UIPadding", parent)
+    padding.PaddingTop = UDim.new(0, top or 0)
+    padding.PaddingBottom = UDim.new(0, bottom or 0)
+    padding.PaddingLeft = UDim.new(0, left or 0)
+    padding.PaddingRight = UDim.new(0, right or 0)
+    return padding
+end
+
+function createSizeConstraint(parent, minSize, maxSize)
+    local constraint = Instance.new("UISizeConstraint", parent)
+    if minSize then constraint.MinSize = minSize end
+    if maxSize then constraint.MaxSize = maxSize end
+    return constraint
+end
+
+function applyHoverEffects(element, hoverTransparency, normalTransparency, pressTransparency)
+    hoverTransparency = hoverTransparency or 0.8
+    normalTransparency = normalTransparency or 0.87
+    pressTransparency = pressTransparency or 0.94
+    
+    element.MouseEnter:Connect(function()
+        tweenProperty(element, "BackgroundTransparency", hoverTransparency, 0.15)
+    end)
+    
+    element.MouseLeave:Connect(function()
+        tweenProperty(element, "BackgroundTransparency", normalTransparency, 0.15)
+    end)
+    
+    element.MouseButton1Down:Connect(function()
+        tweenProperty(element, "BackgroundTransparency", pressTransparency, 0.1)
+    end)
+    
+    element.MouseButton1Up:Connect(function()
+        tweenProperty(element, "BackgroundTransparency", hoverTransparency, 0.1)
+    end)
+end
+
+function registerThemeObject(object, property, themeProperty)
+    table.insert(themeObjects, {
         Object = object,
         Property = property,
         ThemeProperty = themeProperty
     })
 end
 
-local function serializeValue(value: any): any
-    local valueType = typeof(value)
+function applyThemeToObject(object, property, themeProperty)
+    local currentThemeData = getCurrentTheme()
+    local value = currentThemeData[themeProperty]
     
-    if valueType == "Color3" then
-        return {_type = "Color3", R = value.R, G = value.G, B = value.B}
-    elseif valueType == "boolean" then
-        return {_type = "boolean", value = value}
-    elseif valueType == "number" then
-        return {_type = "number", value = value}
-    elseif valueType == "string" then
-        return {_type = "string", value = value}
-    elseif valueType == "Vector2" then
-        return {_type = "Vector2", X = value.X, Y = value.Y}
-    elseif valueType == "Vector3" then
-        return {_type = "Vector3", X = value.X, Y = value.Y, Z = value.Z}
+    if property == "BackgroundColor3" then
+        object.BackgroundColor3 = value
+    elseif property == "TextColor3" then
+        object.TextColor3 = value
+    elseif property == "Color" then
+        object.Color = value
+    elseif property == "ImageColor3" then
+        object.ImageColor3 = value
     end
-    
-    return value
 end
 
-local function deserializeValue(data: any): any
-    if type(data) == "table" and data._type then
-        if data._type == "Color3" then
-            return Color3.new(data.R, data.G, data.B)
-        elseif data._type == "boolean" then
-            return data.value
-        elseif data._type == "number" then
-            return data.value
-        elseif data._type == "string" then
-            return data.value
-        elseif data._type == "Vector2" then
-            return Vector2.new(data.X, data.Y)
-        elseif data._type == "Vector3" then
-            return Vector3.new(data.X, data.Y, data.Z)
-        end
+function createStyledEl(elementType, parent, properties)
+    local element = elementType == "Frame" and createFrame(parent, properties.size, properties.position, properties.backgroundColor, properties.transparency, properties.name)
+        or elementType == "TextLabel" and createTextLabel(parent, properties.text, properties.size, properties.position, properties.font, properties.textSize, properties.textColor, properties.textXAlignment, properties.textYAlignment)
+        or elementType == "TextButton" and createTextButton(parent, properties.text, properties.size, properties.position, properties.font, properties.textSize, properties.textColor, properties.backgroundColor, properties.transparency)
+        or elementType == "TextBox" and createTextBox(parent, properties.text, properties.size, properties.position, properties.font, properties.textSize, properties.textColor, properties.backgroundColor, properties.transparency)
+        or elementType == "ScrollingFrame" and createScrollingFrame(parent, properties.size, properties.position, properties.backgroundColor, properties.transparency)
+        or elementType == "ImageLabel" and createImageLabel(parent, properties.image, properties.size, properties.position, properties.imageColor, properties.transparency)
+    
+    if properties.cornerRadius then
+        createCorner(element, properties.cornerRadius)
     end
     
-    return data
+    if properties.stroke then
+        createStroke(element, properties.stroke.color, properties.stroke.transparency, properties.stroke.thickness)
+    end
+    
+    if properties.theme then
+        registerThemeObject(element, properties.theme.property, properties.theme.themeProperty)
+    end
+    
+    if properties.hoverEffects then
+        applyHoverEffects(element, properties.hoverEffects.hover, properties.hoverEffects.normal, properties.hoverEffects.press)
+    end
+    
+    return element
 end
 
-local function cleanupExistingUI()
-    if _activeWindow then
-        for _, connection in pairs(_cleanupConnections) do
+function cleanupExistingUI()
+    if activeWindow then
+        for _, connection in pairs(cleanupConnections) do
             if connection and connection.Connected then
                 connection:Disconnect()
             end
         end
-        _cleanupConnections = {}
+        cleanupConnections = {}
         
-        if _activeWindow.ScreenGui and _activeWindow.ScreenGui.Parent then
-            _activeWindow.ScreenGui:Destroy()
+        if activeWindow.ScreenGui and activeWindow.ScreenGui.Parent then
+            activeWindow.ScreenGui:Destroy()
         end
-        _activeWindow = nil
+        
+        activeWindow = nil
+        flags = {}
+        themeObjects = {}
+        
+        task.wait(0.1)
+    end
+    
+    for _, gui in pairs(CoreGui:GetChildren()) do
+        if gui.Name == "BetterUI" or gui.Name == "BetterUILoading" then
+            gui:Destroy()
+        end
     end
 end
 
--- Public API
-function BetterUI.new(): BetterUI
-    if _instance then
-        warn("BetterUI: Instance already exists. Use BetterUI:GetInstance() to get the existing instance.")
-        return _instance
-    end
-    
-    local self = setmetatable({}, BetterUI)
-    _instance = self
-    
-    self.Theme = "Default"
-    self.Flags = _flags
-    self.Configs = _configs
-    self.Notifications = _notifications
-    
-    return self
-end
-
-function BetterUI:GetInstance(): BetterUI?
-    return _instance
-end
-
-function BetterUI:SetTheme(themeName: string): boolean
-    if not themeName or type(themeName) ~= "string" then
-        warn("BetterUI: Invalid theme name provided")
-        return false
-    end
-    
+function SetTheme(themeName)
     if not THEMES[themeName] then
-        warn("BetterUI: Theme '" .. themeName .. "' does not exist")
         return false
     end
     
-    local theme = THEMES[themeName]
-    if not validateTheme(theme) then
-        warn("BetterUI: Invalid theme structure for '" .. themeName .. "'")
-        return false
+    currentTheme = themeName
+    local currentThemeData = getCurrentTheme()
+    
+    for _, themeObj in pairs(themeObjects) do
+        if themeObj.Object and themeObj.Object.Parent then
+            applyThemeToObject(themeObj.Object, themeObj.Property, themeObj.ThemeProperty)
+        end
     end
     
-    self.Theme = themeName
-    
-    for _, themeObject in ipairs(_themeObjects) do
-        if themeObject.Object and themeObject.Object.Parent then
-            local success, result = pcall(function()
-                themeObject.Object[themeObject.Property] = theme[themeObject.ThemeProperty]
-            end)
-            
-            if not success then
-                warn("BetterUI: Failed to apply theme property:", result)
+    return true
+end
+
+local notificationsScreenGui = Instance.new("ScreenGui")
+notificationsScreenGui.Name = "Notifications"
+notificationsScreenGui.Parent = CoreGui
+notificationsScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+notificationsScreenGui.ResetOnSpawn = false
+
+local BlurredGui = nil
+if not _G.AcrylicBlurLoaded then
+    BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
+    _G.AcrylicBlurLoaded = true
+end
+
+local notificationCount = 0
+local acylicInstances = {}
+
+Vynixus.ShowNotification = function(title, message, notificationType)
+    if #notifications >= 4 then
+        for _, notif in ipairs(notifications) do
+            if notif and notif.Parent then
+                notif:Destroy()
+            end
+        end
+        for _, instance in ipairs(acylicInstances) do
+            if instance.Instance then
+                instance.Instance:Destroy()
+            end
+        end
+        notifications = {}
+        acylicInstances = {}
+    end
+    notificationCount = notificationCount + 1
+    if notificationCount > 4 then
+        notificationCount = 1
+    end
+
+    local NotificationGui = notificationsScreenGui
+
+    local frame = Instance.new("Frame")
+    frame.Name = "notificationFrame_" .. tostring(tick())
+    frame.Parent = NotificationGui
+    frame.AnchorPoint = Vector2.new(1, 0)
+    frame.Position = UDim2.new(1, -250, 0, 24)
+    frame.Size = UDim2.new(0, 214, 0, 60)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BackgroundTransparency = 0.2
+    frame.BorderColor3 = Color3.new(0, 0, 0)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 202
+
+    if BlurredGui then
+        local acrylicBlurInstance = BlurredGui.new(frame, "Rectangle")
+        acrylicBlurInstance:SetIntensity(0.5)
+        table.insert(acylicInstances, {
+            Instance = acrylicBlurInstance,
+            Index = notificationCount
+        })
+    end
+
+    local corner = Instance.new("UICorner")
+    corner.Parent = frame
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "titleLabel"
+    titleLabel.Parent = frame
+    titleLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.BorderColor3 = Color3.new(0, 0, 0)
+    titleLabel.BorderSizePixel = 0
+    titleLabel.Position = UDim2.new(0, 15, 0, 11)
+    titleLabel.Size = UDim2.new(1, -60, 0, 16)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Text = tostring(title) or "Title"
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.ZIndex = 203
+
+    local descriptionLabel = Instance.new("TextLabel")
+    descriptionLabel.Name = "descriptionLabel"
+    descriptionLabel.Parent = frame
+    descriptionLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+    descriptionLabel.BackgroundTransparency = 1
+    descriptionLabel.BorderColor3 = Color3.new(0, 0, 0)
+    descriptionLabel.BorderSizePixel = 0
+    descriptionLabel.Position = UDim2.new(0, 15, 0, 33)
+    descriptionLabel.Size = UDim2.new(1, -60, 0, 16)
+    descriptionLabel.Font = Enum.Font.Gotham
+    descriptionLabel.Text = tostring(message) or "Description"
+    descriptionLabel.TextColor3 = Color3.new(1, 1, 1)
+    descriptionLabel.TextSize = 14
+    descriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descriptionLabel.ZIndex = 203
+
+    table.insert(notifications, frame)
+    local function rearrangeNotifications()
+        local offsetY = 24
+        for _, notif in ipairs(notifications) do
+            if notif and notif.Parent then
+                notif.Position = UDim2.new(1, -250, 0, offsetY)
+                offsetY = offsetY + notif.Size.Y.Offset + 10
             end
         end
     end
-    
-    return true
+    rearrangeNotifications()
+
+    local function removeNotification()
+        for i, notif in ipairs(notifications) do
+            if notif == frame then
+                table.remove(notifications, i)
+                break
+            end
+        end
+        for i, instance in ipairs(acylicInstances) do
+            if instance.Index == notificationCount then
+                instance.Instance:Destroy()
+                table.remove(acylicInstances, i)
+                break
+            end
+        end
+        notificationCount = notificationCount - 1
+        frame:Destroy()
+        rearrangeNotifications()
+    end
+
+    task.spawn(function()
+        task.wait(4)
+        if frame and frame.Parent then
+            removeNotification()
+        end
+    end)
 end
 
-function BetterUI:Destroy(): boolean
+function SaveConfig(configName)
+    if not configName or configName == "" then
+        return false
+    end
+    
     local success, result = pcall(function()
-        cleanupExistingUI()
-        _instance = nil
-        _themeObjects = {}
-        _flags = {}
-        _configs = {}
-        _notifications = {}
+        local configData = {}
+        for flagName, flagData in pairs(flags) do
+            configData[flagName] = flagData.value
+        end
+        
+        local configJson = HttpService:JSONEncode(configData)
+        local configPath = "BetterUI_Config_" .. PlaceId .. "_" .. configName .. ".json"
+        writefile(configPath, configJson)
     end)
     
     if not success then
-        warn("BetterUI: Failed to destroy library:", result)
         return false
     end
-    
     return true
 end
 
-function BetterUI:ShowNotification(config: NotificationConfig): boolean
-    if not config or type(config) ~= "table" then
-        warn("BetterUI: Invalid notification config")
-        return false
-    end
-    
-    if not config.Title or not config.Message then
-        warn("BetterUI: Notification must have title and message")
-        return false
-    end
-    
-    local validTypes = {"success", "error", "warning", "info"}
-    if not table.find(validTypes, config.Type) then
-        warn("BetterUI: Invalid notification type")
+function LoadConfig(configName)
+    if not configName or configName == "" then
         return false
     end
     
     local success, result = pcall(function()
-        local notification = {
-            Title = config.Title,
-            Message = config.Message,
-            Type = config.Type,
-            Duration = config.Duration or 5,
-            Timestamp = os.time()
-        }
-        
-        table.insert(_notifications, notification)
-        
-        task.spawn(function()
-            task.wait(notification.Duration)
-            for i, notif in ipairs(_notifications) do
-                if notif == notification then
-                    table.remove(_notifications, i)
-                    break
+        local configPath = "BetterUI_Config_" .. PlaceId .. "_" .. configName .. ".json"
+        if isfile(configPath) then
+            local configJson = readfile(configPath)
+            local configData = HttpService:JSONDecode(configJson)
+            
+            for flagName, value in pairs(configData) do
+                if flags[flagName] then
+                    flags[flagName]:SetValue(value)
                 end
             end
-        end)
-    end)
-    
-    if not success then
-        warn("BetterUI: Failed to show notification:", result)
-        return false
-    end
-    
-    return true
-end
-
-function BetterUI:SaveConfig(configName: string): boolean
-    if not configName or type(configName) ~= "string" then
-        warn("BetterUI: Invalid config name")
-        return false
-    end
-    
-    local success, result = pcall(function()
-        local serializedFlags = {}
-        for key, value in pairs(_flags) do
-            serializedFlags[key] = serializeValue(value)
-        end
-        
-        local configData = {
-            Flags = serializedFlags,
-            Theme = self.Theme,
-            Timestamp = os.time()
-        }
-        
-        local jsonData = HttpService:JSONEncode(configData)
-        _configs[configName] = jsonData
-    end)
-    
-    if not success then
-        warn("BetterUI: Failed to save config:", result)
-        return false
-    end
-    
-    return true
-end
-
-function BetterUI:LoadConfig(configName: string): boolean
-    if not configName or type(configName) ~= "string" then
-        warn("BetterUI: Invalid config name")
-        return false
-    end
-    
-    if not _configs[configName] then
-        warn("BetterUI: Config '" .. configName .. "' does not exist")
-        return false
-    end
-    
-    local success, result = pcall(function()
-        local configData = HttpService:JSONDecode(_configs[configName])
-        
-        if configData.Flags then
-            for key, value in pairs(configData.Flags) do
-                _flags[key] = deserializeValue(value)
-            end
-        end
-        
-        if configData.Theme then
-            self:SetTheme(configData.Theme)
+        else
+            return false
         end
     end)
     
     if not success then
-        warn("BetterUI: Failed to load config:", result)
         return false
     end
-    
     return true
 end
 
-function BetterUI:CreateWindow(config: WindowConfig): any
+Vynixus.CreateWindow = function(config)
     if not config or type(config) ~= "table" then
-        warn("BetterUI: Invalid window config")
         return nil
     end
     
-    if not config.Title or not config.Size then
-        warn("BetterUI: Window must have title and size")
-        return nil
+    cleanupExistingUI()
+    
+    local window = {}
+    window.tabs = {}
+    window.containers = {}
+    window.currentTab = nil
+    window.tabCount = 0
+    window.selectedTab = 0
+    window.searchEnabled = config.SearchEnabled or false
+    window.searchElements = {}
+    
+    if config.Theme then
+        SetTheme(config.Theme)
     end
     
-    local success, result = pcall(function()
-        cleanupExistingUI()
-        
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "BetterUI_" .. config.Title
-        screenGui.ResetOnSpawn = false
-        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        screenGui.Parent = CoreGui
-        
-        local mainFrame = Instance.new("Frame")
-        mainFrame.Name = "MainFrame"
-        mainFrame.Size = UDim2.new(0, config.Size.X, 0, config.Size.Y)
-        mainFrame.Position = config.Position and UDim2.new(0, config.Position.X, 0, config.Position.Y) or UDim2.new(0.5, -config.Size.X/2, 0.5, -config.Size.Y/2)
-        mainFrame.BackgroundColor3 = THEMES[self.Theme].MainBG
-        mainFrame.BorderSizePixel = 0
-        mainFrame.Parent = screenGui
-        
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = mainFrame
-        
-        local titleBar = Instance.new("Frame")
-        titleBar.Name = "TitleBar"
-        titleBar.Size = UDim2.new(1, 0, 0, 40)
-        titleBar.BackgroundColor3 = THEMES[self.Theme].ElementColor
-        titleBar.BorderSizePixel = 0
-        titleBar.Parent = mainFrame
-        
-        local titleBarCorner = Instance.new("UICorner")
-        titleBarCorner.CornerRadius = UDim.new(0, 8)
-        titleBarCorner.Parent = titleBar
-        
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Name = "TitleLabel"
-        titleLabel.Size = UDim2.new(1, -80, 1, 0)
-        titleLabel.Position = UDim2.new(0, 10, 0, 0)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.Text = config.Title
-        titleLabel.TextColor3 = THEMES[self.Theme].TextColor
-        titleLabel.TextScaled = true
-        titleLabel.Font = Enum.Font.GothamBold
-        titleLabel.Parent = titleBar
-        
-        registerThemeObject(titleLabel, "TextColor3", "TextColor")
-        registerThemeObject(titleBar, "BackgroundColor3", "ElementColor")
-        registerThemeObject(mainFrame, "BackgroundColor3", "MainBG")
-        
-        _activeWindow = {
-            ScreenGui = screenGui,
-            MainFrame = mainFrame,
-            TitleBar = titleBar,
-            Config = config
+    local screenGui = Instance.new("ScreenGui", CoreGui)
+    screenGui.Name = "BetterUI"
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.ResetOnSpawn = false
+    
+    window.ScreenGui = screenGui
+    
+    local currentThemeData = getCurrentTheme()
+    local windowSize = config.Size or UDim2.fromOffset(580, 460)
+    
+    local mainFrame = createStyledEl("Frame", screenGui, {
+        size = windowSize,
+        position = UDim2.new(0.5, -(windowSize.X.Offset/2), 0.5, -(windowSize.Y.Offset/2)),
+        backgroundColor = currentThemeData.MainBG,
+        transparency = 0,
+        cornerRadius = 6,
+        stroke = {
+            color = currentThemeData.ElementBorder,
+            transparency = 0.8,
+            thickness = 1
+        },
+        theme = {
+            property = "BackgroundColor3",
+            themeProperty = "MainBG"
         }
-        
-        return _activeWindow
+    })
+    mainFrame.Active = true
+    mainFrame.Visible = false
+    
+    local titleBarFrame = createStyledEl("Frame", mainFrame, {
+        size = UDim2.new(1, 0, 0, 42),
+        transparency = 1
+    })
+    
+    local dragging, dragInput, mousePos, startPos = false
+    
+    local function handleDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            startPos = mainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end
+    
+    local function handleDragMove(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end
+    
+    titleBarFrame.InputBegan:Connect(handleDrag)
+    titleBarFrame.InputChanged:Connect(handleDragMove)
+    
+    local dragConnection = UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            tweenProperty(mainFrame, "Position", targetPos, 0.1, Enum.EasingStyle.Quad)
+        end
     end)
     
-    if not success then
-        warn("BetterUI: Failed to create window:", result)
-        return nil
+    table.insert(cleanupConnections, dragConnection)
+    
+    local titleHolder = createStyledEl("Frame", titleBarFrame, {
+        size = UDim2.new(1, -16, 1, 0),
+        position = UDim2.fromOffset(16, 0),
+        transparency = 1
+    })
+    
+    local titleLabel = createStyledEl("TextLabel", titleHolder, {
+        text = config.Title or "BetterUI",
+        size = UDim2.fromScale(1, 1),
+        font = Enum.Font.Gotham,
+        textSize = 15,
+        textColor = currentThemeData.TextColor,
+        textXAlignment = Enum.TextXAlignment.Left,
+        textYAlignment = Enum.TextYAlignment.Center,
+        theme = {
+            property = "TextColor3",
+            themeProperty = "TextColor"
+        }
+    })
+    
+    local titleBarLine = createStyledEl("Frame", titleBarFrame, {
+        size = UDim2.new(1, 0, 0, 1),
+        position = UDim2.new(0, 0, 1, 0),
+        backgroundColor = currentThemeData.TitleBarLine,
+        transparency = 0.5,
+        theme = {
+            property = "BackgroundColor3",
+            themeProperty = "TitleBarLine"
+        }
+    })
+    
+    local tabWidth = config.TabWidth or 160
+    
+    local tabContainer = createStyledEl("Frame", mainFrame, {
+        size = UDim2.new(0, tabWidth, 1, -66),
+        position = UDim2.fromOffset(12, 54),
+        transparency = 1
+    })
+    tabContainer.ClipsDescendants = true
+    
+    local tabScroll = createStyledEl("ScrollingFrame", tabContainer, {
+        size = UDim2.fromScale(1, 1),
+        transparency = 1
+    })
+    tabScroll.ScrollBarThickness = 0
+    tabScroll.ScrollBarImageTransparency = 1
+    tabScroll.CanvasSize = UDim2.fromScale(0, 0)
+    tabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    
+    createListLayout(tabScroll, 4, Enum.SortOrder.LayoutOrder)
+    
+    local containerCanvas = createStyledEl("Frame", mainFrame, {
+        size = UDim2.new(1, -tabWidth - 32, 1, -66),
+        position = UDim2.fromOffset(tabWidth + 26, 54),
+        transparency = 1
+    })
+    
+    local containerHolder = createStyledEl("Frame", containerCanvas, {
+        size = UDim2.fromScale(1, 1),
+        transparency = 1
+    })
+    
+    window.TabScroll = tabScroll
+    window.ContainerHolder = containerHolder
+    
+    function window:ToggleVisibility()
+        local isVisible = mainFrame.Visible
+        mainFrame.Visible = not isVisible
+        
+        if not isVisible then
+            tweenProperty(mainFrame, "Size", windowSize, 0.3)
+        end
     end
     
-    return result
+    function window:CreateTab(name, icon)
+        if not name or name == "" then
+            return nil
+        end
+        
+        local tab = {}
+        window.tabCount = window.tabCount + 1
+        local tabIndex = window.tabCount
+        
+        local tabButton = createStyledEl("TextButton", tabScroll, {
+            size = UDim2.new(1, 0, 0, 34),
+            backgroundColor = currentThemeData.TabUnselected,
+            transparency = 1,
+            cornerRadius = 6,
+            hoverEffects = {
+                hover = 0.89,
+                normal = 1,
+                press = 0.92
+            },
+            theme = {
+                property = "BackgroundColor3",
+                themeProperty = "TabUnselected"
+            }
+        })
+        tabButton.LayoutOrder = tabIndex
+        
+        local tabLabel = createStyledEl("TextLabel", tabButton, {
+            text = name,
+            size = UDim2.new(1, -12, 1, 0),
+            position = UDim2.fromOffset(12, 0),
+            font = Enum.Font.GothamMedium,
+            textSize = 15,
+            textColor = Color3.fromRGB(135, 135, 140),
+            textXAlignment = Enum.TextXAlignment.Left
+        })
+        
+        if icon then
+            local tabIcon = createStyledEl("ImageLabel", tabButton, {
+                image = typeof(icon) == "string" and (string.find(icon, "rbxassetid://") and icon or "rbxassetid://" .. icon) or "rbxassetid://" .. tostring(icon),
+                size = UDim2.fromOffset(16, 16),
+                position = UDim2.fromOffset(8, 9),
+                imageColor = Color3.fromRGB(135, 135, 140),
+                transparency = 0.3
+            })
+            
+            tabLabel.Position = UDim2.fromOffset(32, 0)
+            tabLabel.Size = UDim2.new(1, -44, 1, 0)
+        end
+        
+        local tabContent = createStyledEl("ScrollingFrame", containerHolder, {
+            size = UDim2.fromScale(1, 1),
+            transparency = 1
+        })
+        tabContent.ScrollBarThickness = 3
+        tabContent.BottomImage = "rbxassetid://6889812791"
+        tabContent.MidImage = "rbxassetid://6889812721"
+        tabContent.TopImage = "rbxassetid://6276641225"
+        tabContent.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+        tabContent.ScrollBarImageTransparency = 0.95
+        tabContent.CanvasSize = UDim2.fromScale(0, 0)
+        tabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        tabContent.Visible = false
+        
+        createListLayout(tabContent, 5, Enum.SortOrder.LayoutOrder)
+        createPadding(tabContent, 1, 1, 1, 10)
+        
+        tab.Frame = tabButton
+        tab.Label = tabLabel
+        tab.Content = tabContent
+        tab.Selected = false
+        
+        local function setTransparency(value)
+            tweenProperty(tabButton, "BackgroundTransparency", value, 0.2, Enum.EasingStyle.Quad)
+        end
+        
+        tabButton.MouseEnter:Connect(function()
+            setTransparency(tab.Selected and 0.85 or 0.89)
+        end)
+        
+        tabButton.MouseLeave:Connect(function()
+            setTransparency(tab.Selected and 0.89 or 1)
+        end)
+        
+        tabButton.MouseButton1Down:Connect(function()
+            setTransparency(0.92)
+        end)
+        
+        tabButton.MouseButton1Up:Connect(function()
+            setTransparency(tab.Selected and 0.85 or 0.89)
+        end)
+        
+        tabButton.MouseButton1Click:Connect(function()
+            window:SelectTab(tabIndex)
+        end)
+        
+        window.containers[tabIndex] = tabContent
+        window.tabs[tabIndex] = tab
+        
+        if not window.currentTab then
+            window.currentTab = tab
+            window.selectedTab = tabIndex
+            tabContent.Visible = true
+            tab.Selected = true
+            tabButton.BackgroundTransparency = 0.89
+            tabLabel.TextColor3 = Color3.fromRGB(245, 245, 250)
+        end
+        
+        function tab:AddSection(title)
+            if not title or title == "" then
+                return nil
+            end
+            
+            local section = setmetatable({}, {__index = tab})
+            
+            local sectionRoot = createStyledEl("Frame", tabContent, {
+                size = UDim2.new(1, 0, 0, 22),
+                transparency = 1
+            })
+            sectionRoot.LayoutOrder = 7
+            
+            local sectionTitle = createStyledEl("TextLabel", sectionRoot, {
+                text = title,
+                size = UDim2.new(1, -16, 0, 16),
+                position = UDim2.fromOffset(0, 2),
+                font = Enum.Font.GothamBold,
+                textSize = 16,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                textYAlignment = Enum.TextYAlignment.Center,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            local sectionContainer = createStyledEl("Frame", sectionRoot, {
+                size = UDim2.new(1, 0, 0, 0),
+                position = UDim2.fromOffset(0, 22),
+                backgroundColor = currentThemeData.SectionBG,
+                transparency = 0.3,
+                cornerRadius = 8,
+                stroke = {
+                    color = currentThemeData.SectionBorder,
+                    transparency = 0.6
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "SectionBG"
+                }
+            })
+            
+            createListLayout(sectionContainer, 5, Enum.SortOrder.LayoutOrder)
+            createPadding(sectionContainer, 8, 8, 8, 8)
+            
+            sectionContainer.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                sectionContainer.Size = UDim2.new(1, 0, 0, sectionContainer.UIListLayout.AbsoluteContentSize.Y + 16)
+                sectionRoot.Size = UDim2.new(1, 0, 0, sectionContainer.UIListLayout.AbsoluteContentSize.Y + 38)
+            end)
+            
+            section.Container = sectionContainer
+            section.Content = sectionContainer
+            
+            return section
+        end
+        
+        function tab:AddToggle(text, desc, default, callback, flag)
+            if not text or text == "" then
+                return nil
+            end
+            
+            local toggle = {}
+            local toggled = default or false
+            local container = tab.Content
+            
+            local toggleFrame = createStyledEl("TextButton", container, {
+                size = UDim2.new(1, 0, 0, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                hoverEffects = {
+                    hover = 0.8,
+                    normal = 0.87,
+                    press = 0.94
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            toggleFrame.AutomaticSize = Enum.AutomaticSize.Y
+            toggleFrame.LayoutOrder = 7
+            
+            local labelHolder = createStyledEl("Frame", toggleFrame, {
+                size = UDim2.new(1, -64, 0, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            labelHolder.AutomaticSize = Enum.AutomaticSize.Y
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center)
+            createPadding(labelHolder, 13, 13, 0, 0)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1, 0, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, -54, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            end
+            
+            local toggleSlider = createStyledEl("Frame", toggleFrame, {
+                size = UDim2.fromOffset(36, 18),
+                position = UDim2.new(1, -10, 0.5, 0),
+                backgroundColor = currentThemeData.Accent,
+                transparency = 1,
+                cornerRadius = 9,
+                stroke = {
+                    color = currentThemeData.ElementColor,
+                    transparency = 0.5
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "Accent"
+                }
+            })
+            toggleSlider.AnchorPoint = Vector2.new(1, 0.5)
+            
+            local toggleCircle = createStyledEl("ImageLabel", toggleSlider, {
+                image = "rbxassetid://12266946128",
+                size = UDim2.fromOffset(14, 14),
+                position = UDim2.new(0, 2, 0.5, 0),
+                imageColor = Color3.fromRGB(255, 255, 255),
+                transparency = 0.5
+            })
+            toggleCircle.AnchorPoint = Vector2.new(0, 0.5)
+            
+            if toggled then
+                toggleSlider.BackgroundTransparency = 0
+                toggleSlider.UIStroke.Color = currentThemeData.Accent
+                toggleCircle.Position = UDim2.new(0, 19, 0.5, 0)
+                toggleCircle.ImageTransparency = 0
+            end
+            
+            function toggle:SetValue(value)
+                toggled = value
+                
+                tweenProperty(toggleSlider, "BackgroundTransparency", toggled and 0 or 1, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                tweenProperty(toggleSlider.UIStroke, "Color", toggled and currentThemeData.Accent or currentThemeData.ElementColor, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                tweenProperty(toggleCircle, "Position", UDim2.new(0, toggled and 19 or 2, 0.5, 0), 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                tweenProperty(toggleCircle, "ImageTransparency", toggled and 0 or 0.5, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                
+                if callback then
+                    callback(toggled)
+                end
+            end
+            
+            toggleFrame.MouseButton1Click:Connect(function()
+                toggle:SetValue(not toggled)
+            end)
+            
+            if flag then
+                flags[flag] = {
+                    value = toggled,
+                    SetValue = function(self, value)
+                        toggle:SetValue(value)
+                    end
+                }
+            end
+            
+            return toggle
+        end
+        
+        function tab:AddSlider(text, desc, min, max, default, rounding, callback, flag)
+            if not text or text == "" then
+                return nil
+            end
+            
+            if not min or not max or min >= max then
+                return nil
+            end
+            
+            local slider = {}
+            local value = default or min
+            local dragging = false
+            local container = tab.Content
+            
+            if flag then
+                flags[flag] = {
+                    value = value,
+                    SetValue = function(self, newValue)
+                        value = newValue
+                        slider:SetValue(newValue)
+                    end
+                }
+            end
+            
+            local sliderFrame = createStyledEl("Frame", container, {
+                size = UDim2.new(1, 0, 0, 25),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            sliderFrame.LayoutOrder = 7
+            
+            local labelHolder = createStyledEl("Frame", sliderFrame, {
+                size = UDim2.new(1, -230, 1, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center, Enum.HorizontalAlignment.Center)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1.364, -53, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                sliderFrame.Size = UDim2.new(1, 0, 0, 40)
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, -230, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+            end
+            
+            local valueBox = createStyledEl("TextBox", sliderFrame, {
+                text = tostring(value),
+                size = UDim2.fromOffset(45, 20),
+                position = UDim2.new(1, -215, 0.5, 0),
+                font = Enum.Font.Gotham,
+                textSize = 12,
+                textColor = currentThemeData.TextColor,
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.7,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.6
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            valueBox.AnchorPoint = Vector2.new(0, 0.5)
+            
+            valueBox.FocusLost:Connect(function()
+                local num = tonumber(valueBox.Text)
+                if num then
+                    slider:SetValue(num)
+                else
+                    valueBox.Text = tostring(value)
+                end
+            end)
+            
+            local sliderRail = createStyledEl("Frame", sliderFrame, {
+                size = UDim2.new(1, 0, 0, 4),
+                position = UDim2.new(1, -10, 0.5, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.4,
+                cornerRadius = 1,
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            sliderRail.AnchorPoint = Vector2.new(1, 0.5)
+            
+            createSizeConstraint(sliderRail, nil, Vector2.new(150, math.huge))
+            
+            local sliderRailInner = createStyledEl("Frame", sliderRail, {
+                size = UDim2.new(1, -14, 1, 0),
+                position = UDim2.fromOffset(7, 0),
+                transparency = 1
+            })
+            
+            local sliderFill = createStyledEl("Frame", sliderRail, {
+                size = UDim2.fromScale((value - min) / (max - min), 1),
+                backgroundColor = currentThemeData.Accent,
+                cornerRadius = 1,
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "Accent"
+                }
+            })
+            
+            local sliderDot = createStyledEl("ImageLabel", sliderRailInner, {
+                image = "rbxassetid://12266946128",
+                size = UDim2.fromOffset(14, 14),
+                position = UDim2.new((value - min) / (max - min), -7, 0.5, 0),
+                imageColor = currentThemeData.Accent,
+                theme = {
+                    property = "ImageColor3",
+                    themeProperty = "Accent"
+                }
+            })
+            sliderDot.AnchorPoint = Vector2.new(0, 0.5)
+            
+            local function round(num, bracket)
+                if bracket == 0 then
+                    return math.floor(num)
+                end
+                local numstr = tostring(num)
+                return numstr:find("%.") and tonumber(numstr:sub(1, numstr:find("%.") + bracket)) or num
+            end
+            
+            local function updateSlider(input)
+                local sizeScale = math.clamp((input.Position.X - sliderRailInner.AbsolutePosition.X) / sliderRailInner.AbsoluteSize.X, 0, 1)
+                value = round(math.clamp(min + ((max - min) * sizeScale), min, max), rounding)
+                
+                tweenProperty(sliderDot, "Position", UDim2.new((value - min) / (max - min), -7, 0.5, 0), 0.1, Enum.EasingStyle.Quad)
+                sliderFill.Size = UDim2.fromScale((value - min) / (max - min), 1)
+                valueBox.Text = tostring(value)
+                
+                if callback then
+                    callback(value)
+                end
+            end
+            
+            sliderDot.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                end
+            end)
+            
+            sliderDot.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    updateSlider(input)
+                end
+            end)
+            
+            function slider:SetValue(newValue)
+                value = math.clamp(newValue, min, max)
+                tweenProperty(sliderDot, "Position", UDim2.new((value - min) / (max - min), -7, 0.5, 0), 0.1, Enum.EasingStyle.Quad)
+                sliderFill.Size = UDim2.fromScale((value - min) / (max - min), 1)
+                valueBox.Text = tostring(value)
+                if callback then
+                    callback(value)
+                end
+            end
+            
+            return slider
+        end
+        
+        function tab:AddButton(text, desc, callback)
+            if not text or text == "" then
+                return nil
+            end
+            
+            local container = tab.Content
+            
+            local buttonFrame = createStyledEl("TextButton", container, {
+                size = UDim2.new(1, 0, 0, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                hoverEffects = {
+                    hover = 0.8,
+                    normal = 0.87,
+                    press = 0.94
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            buttonFrame.AutomaticSize = Enum.AutomaticSize.Y
+            buttonFrame.LayoutOrder = 7
+            
+            local labelHolder = createStyledEl("Frame", buttonFrame, {
+                size = UDim2.new(1, -60, 0, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            labelHolder.AutomaticSize = Enum.AutomaticSize.Y
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center)
+            createPadding(labelHolder, 13, 13, 0, 0)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1, 0, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, 0, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            end
+            
+            local buttonText = createStyledEl("TextLabel", buttonFrame, {
+                text = "Press",
+                size = UDim2.fromOffset(45, 20),
+                position = UDim2.new(1, -10, 0.5, 0),
+                font = Enum.Font.Gotham,
+                textSize = 14,
+                textColor = currentThemeData.SubTextColor
+            })
+            buttonText.AnchorPoint = Vector2.new(1, 0.5)
+            
+            buttonFrame.MouseButton1Click:Connect(function()
+                if callback then
+                    callback()
+                end
+            end)
+        end
+        
+        return tab
+    end
+    
+    function window:SelectTab(tabIndex)
+        if not tabIndex or not window.tabs[tabIndex] then
+            return false
+        end
+        
+        window.selectedTab = tabIndex
+        
+        for _, tabObj in pairs(window.tabs) do
+            tweenProperty(tabObj.Frame, "BackgroundTransparency", 1, 0.2, Enum.EasingStyle.Quad)
+            tweenProperty(tabObj.Label, "TextColor3", Color3.fromRGB(135, 135, 140), 0.2, Enum.EasingStyle.Quad)
+            if tabObj.Icon then
+                tweenProperty(tabObj.Icon, "ImageColor3", Color3.fromRGB(135, 135, 140), 0.2, Enum.EasingStyle.Quad)
+            end
+            tabObj.Content.Visible = false
+            tabObj.Selected = false
+        end
+        
+        local selectedTab = window.tabs[tabIndex]
+        tweenProperty(selectedTab.Frame, "BackgroundTransparency", 0.89, 0.2, Enum.EasingStyle.Quad)
+        tweenProperty(selectedTab.Label, "TextColor3", Color3.fromRGB(245, 245, 250), 0.2, Enum.EasingStyle.Quad)
+        if selectedTab.Icon then
+            tweenProperty(selectedTab.Icon, "ImageColor3", Color3.fromRGB(245, 245, 250), 0.2, Enum.EasingStyle.Quad)
+        end
+        selectedTab.Content.Visible = true
+        selectedTab.Selected = true
+        
+        return true
+    end
+    
+    task.wait(1)
+    mainFrame.Visible = true
+    tweenProperty(mainFrame, "Size", windowSize, 0.5)
+    
+    activeWindow = window
+    
+    local cleanupConnection = RunService.Heartbeat:Connect(function()
+        if not screenGui.Parent then
+            cleanupExistingUI()
+        end
+    end)
+    table.insert(cleanupConnections, cleanupConnection)
+    
+    return window
 end
 
--- Component creation methods
-function BetterUI:CreateButton(config: any): any
-    return Button.new(config)
-end
+Vynixus.ShowNotification("Vynixus", "Loaded Vynixus library", "success")
+Vynixus.ShowNotification("Testing Notifications", "Test description", "success")
 
-function BetterUI:CreateToggle(config: any): any
-    return Toggle.new(config)
-end
-
-function BetterUI:CreateSlider(config: any): any
-    return Slider.new(config)
-end
-
-function BetterUI:CreateDropdown(config: any): any
-    return Dropdown.new(config)
-end
-
-function BetterUI:CreateColorPicker(config: any): any
-    return ColorPicker.new(config)
-end
-
-return BetterUI
+return Vynixus

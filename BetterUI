@@ -1541,11 +1541,7 @@ Vynixus.CreateWindow = function(config)
             dropdownButton.Rotation = -90
             dropdownButton.AutoButtonColor = false
             
-            local scrollFrame = createStyledEl("ScrollingFrame", dropdownFrame, {
-                size = UDim2.new(1, -20, 1, -40),
-                position = UDim2.fromOffset(10, 36),
-                transparency = 1
-            })
+            local scrollFrame = createScrollingFrame(dropdownFrame, UDim2.new(1, -20, 1, -40), UDim2.fromOffset(10, 36), currentThemeData.ElementColor, 1)
             scrollFrame.ScrollBarThickness = 3
             scrollFrame.ScrollBarImageColor3 = currentThemeData.Accent
             scrollFrame.ScrollBarImageTransparency = 1
@@ -1759,11 +1755,7 @@ Vynixus.CreateWindow = function(config)
             multiDropdownButton.Rotation = -90
             multiDropdownButton.AutoButtonColor = false
             
-            local scrollFrame = createStyledEl("ScrollingFrame", multiDropdownFrame, {
-                size = UDim2.new(1, -20, 1, -40),
-                position = UDim2.fromOffset(10, 36),
-                transparency = 1
-            })
+            local scrollFrame = createScrollingFrame(multiDropdownFrame, UDim2.new(1, -20, 1, -40), UDim2.fromOffset(10, 36), currentThemeData.ElementColor, 1)
             scrollFrame.ScrollBarThickness = 3
             scrollFrame.ScrollBarImageColor3 = currentThemeData.Accent
             scrollFrame.ScrollBarImageTransparency = 1

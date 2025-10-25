@@ -3,7 +3,6 @@
     Created by Stacm/Stack
     Build 1.0.0
     Date: 2025-10-25
-    Description: A Roblox UI Library intended for exploit use. The UI is inspired from windows applications like Settings, Bloxstrap Menu, Seelen UI and has 16 themes.
     Changelogs:
     - Nothing yet.
 ]]
@@ -1439,6 +1438,754 @@ Vynixus.CreateWindow = function(config)
                     callback()
                 end
             end)
+        end
+        
+        function tab:AddDropdown(text, desc, options, default, callback, flag)
+            if not text or text == "" then
+                return nil
+            end
+            
+            if not options or #options == 0 then
+                return nil
+            end
+            
+            local dropdown = {}
+            local selectedOption = default or options[1]
+            local isOpen = false
+            local container = tab.Content
+            
+            if flag then
+                flags[flag] = {
+                    value = selectedOption,
+                    SetValue = function(self, value)
+                        selectedOption = value
+                        dropdown:SetValue(value)
+                    end
+                }
+            end
+            
+            local dropdownFrame = createStyledEl("Frame", container, {
+                size = UDim2.new(1, 0, 0, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            dropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
+            dropdownFrame.LayoutOrder = 7
+            dropdownFrame.ClipsDescendants = true
+            
+            local labelHolder = createStyledEl("Frame", dropdownFrame, {
+                size = UDim2.new(1, -60, 0, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            labelHolder.AutomaticSize = Enum.AutomaticSize.Y
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center)
+            createPadding(labelHolder, 13, 13, 0, 0)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1, 0, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, 0, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            end
+            
+            local dropdownButton = createStyledEl("TextButton", dropdownFrame, {
+                size = UDim2.fromOffset(24, 27),
+                position = UDim2.new(1, -10, 0, 21),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 1,
+                cornerRadius = 4,
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            dropdownButton.AnchorPoint = Vector2.new(1, 0.5)
+            dropdownButton.Font = Enum.Font.Cartoon
+            dropdownButton.Text = "<"
+            dropdownButton.TextColor3 = currentThemeData.TextColor
+            dropdownButton.TextSize = 19
+            dropdownButton.Rotation = -90
+            dropdownButton.AutoButtonColor = false
+            
+            local scrollFrame = createStyledEl("ScrollingFrame", dropdownFrame, {
+                size = UDim2.new(1, -20, 1, -40),
+                position = UDim2.fromOffset(10, 36),
+                transparency = 1
+            })
+            scrollFrame.ScrollBarThickness = 3
+            scrollFrame.ScrollBarImageColor3 = currentThemeData.Accent
+            scrollFrame.ScrollBarImageTransparency = 1
+            scrollFrame.CanvasSize = UDim2.fromScale(0, 0)
+            scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+            scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+            scrollFrame.Visible = false
+            scrollFrame.Theme = {
+                property = "ScrollBarImageColor3",
+                themeProperty = "Accent"
+            }
+            
+            createListLayout(scrollFrame, 2, Enum.SortOrder.LayoutOrder)
+            createPadding(scrollFrame, 5, 5, 0, 0)
+            
+            for _, option in ipairs(options) do
+                local optionButton = createStyledEl("TextButton", scrollFrame, {
+                    size = UDim2.new(1, 0, 0, 25),
+                    backgroundColor = currentThemeData.ElementColor,
+                    transparency = 0.8,
+                    cornerRadius = 4,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "ElementColor"
+                    }
+                })
+                optionButton.Text = option
+                optionButton.Font = Enum.Font.Gotham
+                optionButton.TextColor3 = currentThemeData.TextColor
+                optionButton.TextSize = 12
+                optionButton.AutoButtonColor = false
+                
+                local indicatorLine = createStyledEl("Frame", optionButton, {
+                    size = UDim2.new(0, 3, 1, -4),
+                    position = UDim2.fromOffset(2, 2),
+                    backgroundColor = currentThemeData.Accent,
+                    transparency = 0,
+                    cornerRadius = 1,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "Accent"
+                    }
+                })
+                indicatorLine.Visible = (selectedOption == option)
+                
+                optionButton.MouseButton1Click:Connect(function()
+                    selectedOption = option
+                    isOpen = false
+                    scrollFrame.Visible = false
+                    tweenProperty(dropdownFrame, "Size", UDim2.new(1, 0, 0, 0), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Size", UDim2.fromOffset(24, 27), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Rotation", -90, 0.4, Enum.EasingStyle.Quint)
+                    
+                    for _, child in ipairs(scrollFrame:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            local indicator = child:FindFirstChild("Frame")
+                            if indicator then
+                                indicator.Visible = (child.Text == selectedOption)
+                            end
+                        end
+                    end
+                    
+                    if callback then
+                        callback(selectedOption)
+                    end
+                end)
+                
+                applyHoverEffects(optionButton, 0.6, 0.8, 0.4)
+            end
+            
+            dropdownButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                if isOpen then
+                    local listSize = math.min(#options * 27 + 10, 150)
+                    tweenProperty(dropdownFrame, "Size", UDim2.new(1, 0, 0, listSize + 36), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Size", UDim2.fromOffset(27, 27), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Rotation", 90, 0.4, Enum.EasingStyle.Quint)
+                    task.wait(0.2)
+                    scrollFrame.Visible = true
+                else
+                    scrollFrame.Visible = false
+                    tweenProperty(dropdownFrame, "Size", UDim2.new(1, 0, 0, 0), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Size", UDim2.fromOffset(24, 27), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(dropdownButton, "Rotation", -90, 0.4, Enum.EasingStyle.Quint)
+                end
+            end)
+            
+            function dropdown:SetValue(value)
+                selectedOption = value
+                for _, child in ipairs(scrollFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        local indicator = child:FindFirstChild("Frame")
+                        if indicator then
+                            indicator.Visible = (child.Text == selectedOption)
+                        end
+                    end
+                end
+            end
+            
+            return dropdown
+        end
+        
+        function tab:AddMultiDropdown(text, desc, options, defaults, callback, flag)
+            if not text or text == "" then
+                return nil
+            end
+            
+            if not options or #options == 0 then
+                return nil
+            end
+            
+            local multiDropdown = {}
+            local selectedOptions = {}
+            for _, v in ipairs(defaults or {}) do
+                selectedOptions[v] = true
+            end
+            local isOpen = false
+            local container = tab.Content
+            
+            if flag then
+                flags[flag] = {
+                    value = selectedOptions,
+                    SetValue = function(self, value)
+                        selectedOptions = value
+                        multiDropdown:SetValue(value)
+                    end
+                }
+            end
+            
+            local function getSelectedText()
+                local selected = {}
+                for opt, isSelected in pairs(selectedOptions) do
+                    if isSelected then
+                        table.insert(selected, opt)
+                    end
+                end
+                return #selected > 0 and table.concat(selected, ", ") or "None"
+            end
+            
+            local multiDropdownFrame = createStyledEl("Frame", container, {
+                size = UDim2.new(1, 0, 0, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            multiDropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
+            multiDropdownFrame.LayoutOrder = 7
+            multiDropdownFrame.ClipsDescendants = true
+            
+            local labelHolder = createStyledEl("Frame", multiDropdownFrame, {
+                size = UDim2.new(1, -60, 0, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            labelHolder.AutomaticSize = Enum.AutomaticSize.Y
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center)
+            createPadding(labelHolder, 13, 13, 0, 0)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1, 0, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, 0, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            end
+            
+            local multiDropdownButton = createStyledEl("TextButton", multiDropdownFrame, {
+                size = UDim2.fromOffset(24, 27),
+                position = UDim2.new(1, -10, 0, 21),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 1,
+                cornerRadius = 4,
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            multiDropdownButton.AnchorPoint = Vector2.new(1, 0.5)
+            multiDropdownButton.Font = Enum.Font.Cartoon
+            multiDropdownButton.Text = "<"
+            multiDropdownButton.TextColor3 = currentThemeData.TextColor
+            multiDropdownButton.TextSize = 19
+            multiDropdownButton.Rotation = -90
+            multiDropdownButton.AutoButtonColor = false
+            
+            local scrollFrame = createStyledEl("ScrollingFrame", multiDropdownFrame, {
+                size = UDim2.new(1, -20, 1, -40),
+                position = UDim2.fromOffset(10, 36),
+                transparency = 1
+            })
+            scrollFrame.ScrollBarThickness = 3
+            scrollFrame.ScrollBarImageColor3 = currentThemeData.Accent
+            scrollFrame.ScrollBarImageTransparency = 1
+            scrollFrame.CanvasSize = UDim2.fromScale(0, 0)
+            scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+            scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+            scrollFrame.Visible = false
+            scrollFrame.Theme = {
+                property = "ScrollBarImageColor3",
+                themeProperty = "Accent"
+            }
+            
+            createListLayout(scrollFrame, 2, Enum.SortOrder.LayoutOrder)
+            createPadding(scrollFrame, 5, 5, 0, 0)
+            
+            for _, option in ipairs(options) do
+                local optionButton = createStyledEl("TextButton", scrollFrame, {
+                    size = UDim2.new(1, 0, 0, 25),
+                    backgroundColor = currentThemeData.ElementColor,
+                    transparency = 0.8,
+                    cornerRadius = 4,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "ElementColor"
+                    }
+                })
+                optionButton.Text = option
+                optionButton.Font = Enum.Font.Gotham
+                optionButton.TextColor3 = currentThemeData.TextColor
+                optionButton.TextSize = 12
+                optionButton.AutoButtonColor = false
+                
+                local indicatorLine = createStyledEl("Frame", optionButton, {
+                    size = UDim2.new(0, 3, 1, -4),
+                    position = UDim2.fromOffset(2, 2),
+                    backgroundColor = currentThemeData.Accent,
+                    transparency = 0,
+                    cornerRadius = 1,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "Accent"
+                    }
+                })
+                indicatorLine.Visible = selectedOptions[option]
+                
+                optionButton.MouseButton1Click:Connect(function()
+                    selectedOptions[option] = not selectedOptions[option]
+                    indicatorLine.Visible = selectedOptions[option]
+                    if callback then
+                        callback(selectedOptions)
+                    end
+                end)
+                
+                applyHoverEffects(optionButton, 0.6, 0.8, 0.4)
+            end
+            
+            multiDropdownButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                if isOpen then
+                    local listSize = math.min(#options * 27 + 10, 150)
+                    tweenProperty(multiDropdownFrame, "Size", UDim2.new(1, 0, 0, listSize + 36), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(multiDropdownButton, "Size", UDim2.fromOffset(27, 27), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(multiDropdownButton, "Rotation", 90, 0.4, Enum.EasingStyle.Quint)
+                    task.wait(0.2)
+                    scrollFrame.Visible = true
+                else
+                    scrollFrame.Visible = false
+                    tweenProperty(multiDropdownFrame, "Size", UDim2.new(1, 0, 0, 0), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(multiDropdownButton, "Size", UDim2.fromOffset(24, 27), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(multiDropdownButton, "Rotation", -90, 0.4, Enum.EasingStyle.Quint)
+                end
+            end)
+            
+            function multiDropdown:SetValue(value)
+                selectedOptions = value
+                for _, option in ipairs(options) do
+                    local optionButton = scrollFrame:FindFirstChild(option)
+                    if optionButton then
+                        local indicator = optionButton:FindFirstChild("Frame")
+                        if indicator then
+                            indicator.Visible = selectedOptions[option]
+                        end
+                    end
+                end
+            end
+            
+            function multiDropdown:GetSelected()
+                return selectedOptions
+            end
+            
+            return multiDropdown
+        end
+        
+        function tab:AddRGBPicker(text, desc, default, callback, flag)
+            if not text or text == "" then
+                return nil
+            end
+            
+            local rgbPicker = {}
+            local currentColor = default or Color3.fromRGB(255, 255, 255)
+            local isOpen = false
+            local container = tab.Content
+            
+            if flag then
+                flags[flag] = {
+                    value = currentColor,
+                    SetValue = function(self, value)
+                        currentColor = value
+                        if rgbPicker.SetValue then
+                            rgbPicker:SetValue(value)
+                        end
+                    end
+                }
+            end
+            
+            local rgbFrame = createStyledEl("Frame", container, {
+                size = UDim2.new(1, 0, 0, 0),
+                transparency = 1
+            })
+            rgbFrame.AutomaticSize = Enum.AutomaticSize.Y
+            rgbFrame.LayoutOrder = 7
+            rgbFrame.ClipsDescendants = true
+            
+            local rgbButton = createStyledEl("TextButton", rgbFrame, {
+                size = UDim2.new(1, 0, 0, 0),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                hoverEffects = {
+                    hover = 0.8,
+                    normal = 0.87,
+                    press = 0.94
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            rgbButton.AutomaticSize = Enum.AutomaticSize.Y
+            rgbButton.Text = ""
+            rgbButton.AutoButtonColor = false
+            
+            local labelHolder = createStyledEl("Frame", rgbButton, {
+                size = UDim2.new(1, -64, 0, 0),
+                position = UDim2.fromOffset(10, 0),
+                transparency = 1
+            })
+            labelHolder.AutomaticSize = Enum.AutomaticSize.Y
+            
+            createListLayout(labelHolder, 0, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Center)
+            createPadding(labelHolder, 13, 13, 0, 0)
+            
+            local titleLabel = createStyledEl("TextLabel", labelHolder, {
+                text = text,
+                size = UDim2.new(1, 0, 0, 14),
+                font = Enum.Font.GothamMedium,
+                textSize = 13,
+                textColor = currentThemeData.TextColor,
+                textXAlignment = Enum.TextXAlignment.Left,
+                theme = {
+                    property = "TextColor3",
+                    themeProperty = "TextColor"
+                }
+            })
+            
+            if desc then
+                local descLabel = createStyledEl("TextLabel", labelHolder, {
+                    text = desc,
+                    size = UDim2.new(1, 0, 0, 14),
+                    font = Enum.Font.Gotham,
+                    textSize = 12,
+                    textColor = currentThemeData.SubTextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "SubTextColor"
+                    }
+                })
+                descLabel.TextWrapped = true
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            end
+            
+            local colorPreview = createStyledEl("Frame", rgbButton, {
+                size = UDim2.fromOffset(26, 14),
+                position = UDim2.new(1, -10, 0.5, 0),
+                backgroundColor = currentColor,
+                transparency = 0,
+                cornerRadius = 1
+            })
+            colorPreview.AnchorPoint = Vector2.new(1, 0.5)
+            
+            local slidersContainer = createStyledEl("Frame", rgbFrame, {
+                size = UDim2.new(1, 0, 0, 0),
+                position = UDim2.fromOffset(0, 60),
+                backgroundColor = currentThemeData.ElementColor,
+                transparency = 0.87,
+                cornerRadius = 4,
+                stroke = {
+                    color = currentThemeData.ElementBorder,
+                    transparency = 0.5
+                },
+                theme = {
+                    property = "BackgroundColor3",
+                    themeProperty = "ElementColor"
+                }
+            })
+            slidersContainer.ClipsDescendants = true
+            
+            createListLayout(slidersContainer, 8, Enum.SortOrder.LayoutOrder)
+            createPadding(slidersContainer, 10, 10, 10, 10)
+            
+            local function createColorSlider(colorName, colorIndex, initialValue)
+                local sliderFrame = createStyledEl("Frame", slidersContainer, {
+                    size = UDim2.new(1, 0, 0, 30),
+                    transparency = 1
+                })
+                
+                local sliderLabel = createStyledEl("TextLabel", sliderFrame, {
+                    text = colorName,
+                    size = UDim2.fromOffset(15, 12),
+                    position = UDim2.fromOffset(0, 0),
+                    font = Enum.Font.GothamMedium,
+                    textSize = 11,
+                    textColor = currentThemeData.TextColor,
+                    textXAlignment = Enum.TextXAlignment.Left,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "TextColor"
+                    }
+                })
+                
+                local sliderValue = createStyledEl("TextBox", sliderFrame, {
+                    size = UDim2.fromOffset(30, 12),
+                    position = UDim2.new(1, 0, 0, 0),
+                    text = tostring(initialValue),
+                    font = Enum.Font.Gotham,
+                    textSize = 11,
+                    textColor = currentThemeData.Accent,
+                    textXAlignment = Enum.TextXAlignment.Right,
+                    theme = {
+                        property = "TextColor3",
+                        themeProperty = "Accent"
+                    }
+                })
+                sliderValue.AnchorPoint = Vector2.new(1, 0)
+                sliderValue.ClearTextOnFocus = false
+                sliderValue.TextEditable = true
+                
+                local sliderBar = createStyledEl("Frame", sliderFrame, {
+                    size = UDim2.new(1, 0, 0, 6),
+                    position = UDim2.fromOffset(0, 18),
+                    backgroundColor = Color3.fromRGB(
+                        math.max(currentThemeData.Accent.R * 255 * 0.3, 0),
+                        math.max(currentThemeData.Accent.G * 255 * 0.3, 0),
+                        math.max(currentThemeData.Accent.B * 255 * 0.3, 0)
+                    ),
+                    transparency = 0,
+                    cornerRadius = 1,
+                    name = "sliderBar"
+                })
+                
+                local sliderFill = createStyledEl("Frame", sliderBar, {
+                    size = UDim2.new(initialValue / 255, 0, 1, 0),
+                    backgroundColor = currentThemeData.Accent,
+                    transparency = 0,
+                    cornerRadius = 1,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "Accent"
+                    }
+                })
+                
+                local sliderKnob = createStyledEl("Frame", sliderBar, {
+                    size = UDim2.fromOffset(14, 14),
+                    position = UDim2.new(initialValue / 255, 0, 0.5, 0),
+                    backgroundColor = currentThemeData.Accent,
+                    transparency = 0,
+                    cornerRadius = 1,
+                    theme = {
+                        property = "BackgroundColor3",
+                        themeProperty = "Accent"
+                    }
+                })
+                sliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+                
+                createStroke(sliderKnob, currentThemeData.ElementBorder, 0.3, 2)
+                
+                local sliderButton = createStyledEl("TextButton", sliderBar, {
+                    size = UDim2.new(1, 0, 1, 0),
+                    transparency = 1,
+                    text = ""
+                })
+                
+                local currentSliderValue = initialValue
+                local dragging = false
+                
+                local function updateSlider(input)
+                    local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+                    currentSliderValue = math.floor(pos * 255 + 0.5)
+                    currentSliderValue = math.clamp(currentSliderValue, 0, 255)
+                    
+                    tweenProperty(sliderFill, "Size", UDim2.new(currentSliderValue / 255, 0, 1, 0), 0.1, Enum.EasingStyle.Quad)
+                    tweenProperty(sliderKnob, "Position", UDim2.new(currentSliderValue / 255, 0, 0.5, 0), 0.1, Enum.EasingStyle.Quad)
+                    
+                    sliderValue.Text = tostring(currentSliderValue)
+                    local r, g, b = currentColor.R * 255, currentColor.G * 255, currentColor.B * 255
+                    if colorIndex == 1 then r = currentSliderValue
+                    elseif colorIndex == 2 then g = currentSliderValue
+                    else b = currentSliderValue end
+                    currentColor = Color3.fromRGB(r, g, b)
+                    colorPreview.BackgroundColor3 = currentColor
+                    if callback then
+                        callback(currentColor)
+                    end
+                end
+                
+                sliderButton.MouseButton1Down:Connect(function()
+                    dragging = true
+                end)
+                
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = false
+                    end
+                end)
+                
+                UserInputService.InputChanged:Connect(function(input)
+                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                        updateSlider(input)
+                    end
+                end)
+                
+                sliderButton.MouseButton1Click:Connect(function(input)
+                    updateSlider(input)
+                end)
+                
+                sliderValue.FocusLost:Connect(function()
+                    local inputValue = tonumber(sliderValue.Text)
+                    if inputValue then
+                        currentSliderValue = math.floor(inputValue + 0.5)
+                        currentSliderValue = math.clamp(currentSliderValue, 0, 255)
+                        
+                        tweenProperty(sliderFill, "Size", UDim2.new(currentSliderValue / 255, 0, 1, 0), 0.2, Enum.EasingStyle.Quad)
+                        tweenProperty(sliderKnob, "Position", UDim2.new(currentSliderValue / 255, 0, 0.5, 0), 0.2, Enum.EasingStyle.Quad)
+                        
+                        sliderValue.Text = tostring(currentSliderValue)
+                        local r, g, b = currentColor.R * 255, currentColor.G * 255, currentColor.B * 255
+                        if colorIndex == 1 then r = currentSliderValue
+                        elseif colorIndex == 2 then g = currentSliderValue
+                        else b = currentSliderValue end
+                        currentColor = Color3.fromRGB(r, g, b)
+                        colorPreview.BackgroundColor3 = currentColor
+                        if callback then
+                            callback(currentColor)
+                        end
+                    else
+                        sliderValue.Text = tostring(currentSliderValue)
+                    end
+                end)
+                
+                return {
+                    SetValue = function(value)
+                        currentSliderValue = math.clamp(value, 0, 255)
+                        tweenProperty(sliderFill, "Size", UDim2.new(currentSliderValue / 255, 0, 1, 0), 0.2, Enum.EasingStyle.Quad)
+                        tweenProperty(sliderKnob, "Position", UDim2.new(currentSliderValue / 255, 0, 0.5, 0), 0.2, Enum.EasingStyle.Quad)
+                        sliderValue.Text = tostring(currentSliderValue)
+                    end
+                }
+            end
+            
+            local rSlider = createColorSlider("R", 1, math.floor(currentColor.R * 255))
+            local gSlider = createColorSlider("G", 2, math.floor(currentColor.G * 255))
+            local bSlider = createColorSlider("B", 3, math.floor(currentColor.B * 255))
+            
+            local function tweenRGBLabels(transparency)
+                for _, child in ipairs(slidersContainer:GetChildren()) do
+                    if child:IsA("Frame") then
+                        local label = child:FindFirstChild("TextLabel")
+                        local value = child:FindFirstChild("TextBox")
+                        if label then
+                            tweenProperty(label, "TextTransparency", transparency, 0.3)
+                        end
+                        if value then
+                            tweenProperty(value, "TextTransparency", transparency, 0.3)
+                        end
+                    end
+                end
+            end
+            
+            task.wait()
+            local buttonHeight = rgbButton.AbsoluteSize.Y
+            rgbFrame.Size = UDim2.new(1, 0, 0, buttonHeight)
+            
+            rgbButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                if isOpen then
+                    tweenProperty(rgbFrame, "Size", UDim2.new(1, 0, 0, buttonHeight + 133), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(slidersContainer, "Size", UDim2.new(1, 0, 0, 130), 0.4, Enum.EasingStyle.Quint)
+                    tweenRGBLabels(0)
+                else
+                    tweenRGBLabels(1)
+                    tweenProperty(rgbFrame, "Size", UDim2.new(1, 0, 0, buttonHeight), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(slidersContainer, "Size", UDim2.new(1, 0, 0, 0), 0.4, Enum.EasingStyle.Quint)
+                end
+            end)
+            
+            function rgbPicker:SetValue(color)
+                currentColor = color
+                colorPreview.BackgroundColor3 = color
+                rSlider.SetValue(math.floor(color.R * 255))
+                gSlider.SetValue(math.floor(color.G * 255))
+                bSlider.SetValue(math.floor(color.B * 255))
+            end
+            
+            return rgbPicker
         end
         
         return tab

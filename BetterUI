@@ -1553,10 +1553,7 @@ Vynixus.CreateWindow = function(config)
             scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
             scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
             scrollFrame.Visible = false
-            scrollFrame.Theme = {
-                property = "ScrollBarImageColor3",
-                themeProperty = "Accent"
-            }
+            registerThemeObject(scrollFrame, "ScrollBarImageColor3", "Accent")
             
             createListLayout(scrollFrame, 2, Enum.SortOrder.LayoutOrder)
             createPadding(scrollFrame, 5, 5, 0, 0)
@@ -1774,10 +1771,7 @@ Vynixus.CreateWindow = function(config)
             scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
             scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
             scrollFrame.Visible = false
-            scrollFrame.Theme = {
-                property = "ScrollBarImageColor3",
-                themeProperty = "Accent"
-            }
+            registerThemeObject(scrollFrame, "ScrollBarImageColor3", "Accent")
             
             createListLayout(scrollFrame, 2, Enum.SortOrder.LayoutOrder)
             createPadding(scrollFrame, 5, 5, 0, 0)

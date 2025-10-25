@@ -1229,6 +1229,8 @@ Vynixus.CreateWindow = function(config)
                     }
                 })
                 descLabel.TextWrapped = true
+            else
+                sliderFrame.Size = UDim2.new(1, 0, 0, 25)
             end
             
             local valueBox = createStyledEl("TextBox", sliderFrame, {
@@ -2045,6 +2047,9 @@ Vynixus.CreateWindow = function(config)
                 sliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
                 
                 createStroke(sliderKnob, currentThemeData.ElementBorder, 0.3, 2)
+                createCorner(sliderFill, 1)
+                createCorner(sliderBar, 1)
+                createCorner(sliderValue, 1)
                 
                 local sliderButton = createStyledEl("TextButton", sliderBar, {
                     size = UDim2.new(1, 0, 1, 0),
@@ -2155,13 +2160,19 @@ Vynixus.CreateWindow = function(config)
             rgbButton.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 if isOpen then
-                    tweenProperty(rgbFrame, "Size", UDim2.new(1, 0, 0, buttonHeight + 133), 0.4, Enum.EasingStyle.Quint)
-                    tweenProperty(slidersContainer, "Size", UDim2.new(1, 0, 0, 130), 0.4, Enum.EasingStyle.Quint)
+                    slidersContainer.Size = UDim2.new(1, 0, 0, 0)
+                    slidersContainer.Visible = true
+                    task.wait()
+                    local slidersHeight = slidersContainer.AbsoluteSize.Y
+                    tweenProperty(rgbFrame, "Size", UDim2.new(1, 0, 0, buttonHeight + slidersHeight), 0.4, Enum.EasingStyle.Quint)
+                    tweenProperty(slidersContainer, "Size", UDim2.new(1, 0, 0, slidersHeight), 0.4, Enum.EasingStyle.Quint)
                     tweenRGBLabels(0)
                 else
                     tweenRGBLabels(1)
                     tweenProperty(rgbFrame, "Size", UDim2.new(1, 0, 0, buttonHeight), 0.4, Enum.EasingStyle.Quint)
                     tweenProperty(slidersContainer, "Size", UDim2.new(1, 0, 0, 0), 0.4, Enum.EasingStyle.Quint)
+                    task.wait(0.4)
+                    slidersContainer.Visible = false
                 end
             end)
             

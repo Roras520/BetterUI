@@ -1876,7 +1876,6 @@ Vynixus.CreateWindow = function(config)
                 size = UDim2.new(1, 0, 0, 0),
                 transparency = 1
             })
-            rgbFrame.AutomaticSize = Enum.AutomaticSize.Y
             rgbFrame.LayoutOrder = 7
             rgbFrame.ClipsDescendants = true
             

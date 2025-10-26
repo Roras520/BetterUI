@@ -1,10 +1,11 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.0.5
+    Build 1.0.6
     Date: 2025-10-25
     Changelogs:
-    - Nothing yet.
+    - Added Acrylic
+    - Fixed RGB Picker, Dropdown, and Multi-Dropdown making a huge gap in the section.
 ]]
 
 if VYNIXUS_LOADED then
@@ -515,7 +516,36 @@ notificationsScreenGui.Parent = CoreGui
 notificationsScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 notificationsScreenGui.ResetOnSpawn = false
 
+local BlurredGui = nil
+local acrylicEnabled = false
+local currentWindow = nil
+
 Vynixus.SetTheme = SetTheme
+
+function Vynixus.SetAcrylic(enabled)
+    acrylicEnabled = enabled
+    
+    if enabled and not BlurredGui then
+        BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
+    end
+    
+    if currentWindow and currentWindow.ScreenGui then
+        local mainFrame = currentWindow.ScreenGui:FindFirstChild("MainFrame")
+        if mainFrame then
+            if enabled then
+                mainFrame.BackgroundTransparency = 0.3
+                if BlurredGui then
+                    BlurredGui:Apply(mainFrame, 0.45)
+                end
+            else
+                mainFrame.BackgroundTransparency = 0
+                if BlurredGui then
+                    BlurredGui:Remove(mainFrame)
+                end
+            end
+        end
+    end
+end
 
 function SaveConfig(configName)
     if not configName or configName == "" then
@@ -582,6 +612,7 @@ Vynixus.CreateWindow = function(config)
     window.searchEnabled = config.SearchEnabled or false
     window.searchElements = {}
     window.Theme = config.Theme or "Default"
+    window.Acrylic = config.Acrylic or false
     
     local screenGui = Instance.new("ScreenGui", CoreGui)
     screenGui.Name = "BetterUI"
@@ -597,7 +628,7 @@ Vynixus.CreateWindow = function(config)
         size = windowSize,
         position = UDim2.new(0.5, -(windowSize.X.Offset/2), 0.5, -(windowSize.Y.Offset/2)),
         backgroundColor = currentThemeData.MainBG,
-        transparency = 0,
+        transparency = window.Acrylic and 0.3 or 0,
         cornerRadius = 6,
         stroke = {
             color = currentThemeData.ElementBorder,
@@ -609,6 +640,7 @@ Vynixus.CreateWindow = function(config)
             themeProperty = "MainBG"
         }
     })
+    mainFrame.Name = "MainFrame"
     mainFrame.Active = true
     mainFrame.Visible = false
     
@@ -2088,6 +2120,18 @@ Vynixus.CreateWindow = function(config)
     tweenProperty(mainFrame, "Size", windowSize, 0.5)
     
     activeWindow = window
+    currentWindow = window
+    
+    -- Apply acrylic if enabled
+    if window.Acrylic then
+        acrylicEnabled = true
+        if not BlurredGui then
+            BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
+        end
+        if BlurredGui then
+            BlurredGui:Apply(mainFrame, 0.45)
+        end
+    end
     
     task.spawn(function()
         task.wait(5)

@@ -1,11 +1,12 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.0.6
+    Build 1.0.7
     Date: 2025-10-25
     Changelogs:
     - Added Acrylic
     - Fixed RGB Picker, Dropdown, and Multi-Dropdown making a huge gap in the section.
+    - Uses the newer Acrylic Module.
 ]]
 
 if VYNIXUS_LOADED then
@@ -475,11 +476,17 @@ function cleanupExistingUI()
         end
         cleanupConnections = {}
         
+        if currentBlurObject then
+            currentBlurObject:Destroy()
+            currentBlurObject = nil
+        end
+        
         if activeWindow.ScreenGui and activeWindow.ScreenGui.Parent then
             activeWindow.ScreenGui:Destroy()
         end
         
         activeWindow = nil
+        currentWindow = nil
         flags = {}
         themeObjects = {}
         
@@ -519,6 +526,7 @@ notificationsScreenGui.ResetOnSpawn = false
 local BlurredGui = nil
 local acrylicEnabled = false
 local currentWindow = nil
+local currentBlurObject = nil
 
 Vynixus.SetTheme = SetTheme
 
@@ -534,13 +542,15 @@ function Vynixus.SetAcrylic(enabled)
         if mainFrame then
             if enabled then
                 mainFrame.BackgroundTransparency = 0.3
-                if BlurredGui then
-                    BlurredGui:Apply(mainFrame, 0.45)
+                if BlurredGui and not currentBlurObject then
+                    currentBlurObject = BlurredGui.new(mainFrame, "Rectangle")
+                    currentBlurObject:SetIntensity(0.45)
                 end
             else
                 mainFrame.BackgroundTransparency = 0
-                if BlurredGui then
-                    BlurredGui:Remove(mainFrame)
+                if currentBlurObject then
+                    currentBlurObject:Destroy()
+                    currentBlurObject = nil
                 end
             end
         end
@@ -2128,8 +2138,9 @@ Vynixus.CreateWindow = function(config)
         if not BlurredGui then
             BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
         end
-        if BlurredGui then
-            BlurredGui:Apply(mainFrame, 0.45)
+        if BlurredGui and not currentBlurObject then
+            currentBlurObject = BlurredGui.new(mainFrame, "Rectangle")
+            currentBlurObject:SetIntensity(0.45)
         end
     end
     

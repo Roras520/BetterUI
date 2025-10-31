@@ -2,10 +2,9 @@
     Better UI library
     Created by Stacm/Stack
     Build 1.1.8
-    Date: 2025-10-30
+    Date: 2025-10-31
     Changelogs:
-    - Don't even ask bro I completely forgot everything I did.
-    - I think i polished out the UI a little more??
+    - Deadass just changed a line of code I'm not going to even count this as an update.
 ]]
 
 if VYNIXUS_LOADED then
@@ -627,7 +626,7 @@ function Vynixus.SetAcrylic(enabled)
 		local mainFrame = currentWindow.ScreenGui:FindFirstChild("MainFrame")
 		if mainFrame then
 			if enabled then
-				mainFrame.BackgroundTransparency = 0.24
+				mainFrame.BackgroundTransparency = 0.1
 				if BlurredGui and not currentBlurObject then
 					currentBlurObject = BlurredGui.new(mainFrame, "Rectangle")
 					currentBlurObject:SetIntensity(0.45)
@@ -767,6 +766,7 @@ Vynixus.CreateWindow = function(config)
 		local list = createScrollingFrame(popup, UDim2.new(1, -8, 1, -8), UDim2.fromOffset(4, 4), themeNow.MainBG, 1)
 		list.CanvasSize = UDim2.fromScale(0, 0)
 		list.ScrollBarThickness = 4
+		list.ScrollBarImageTransparency = 0.5
 		registerThemeObject(list, "ScrollBarImageColor3", "Accent")
 		createListLayout(list, 2, Enum.SortOrder.LayoutOrder)
 		createPadding(list, 4, 4, 2, 2)

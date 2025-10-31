@@ -1,10 +1,16 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.1.8
+    Build 1.2.0
     Date: 2025-10-31
     Changelogs:
-    - Deadass just changed a line of code I'm not going to even count this as an update.
+    - Added animation for tab selection indicator line
+    - Redesigned dropdown toggle buttons with new styling
+    - Redesigned dropdown popups with dark theme and improved option styling
+    - Added animations for multi-dropdown accent bars
+    - Removed auto-close on outside click for dropdowns
+    - Fixed RGB picker slider click handler bug
+    - Added ripple effects option when calling UI Library
 ]]
 
 if VYNIXUS_LOADED then
@@ -248,6 +254,7 @@ THEMES = {
 }
 
 currentTheme = "Default"
+rippleEffectsOn = false
 flags = {}
 configs = {}
 notifications = {}
@@ -314,8 +321,7 @@ function createTextLabel(parent, text, size, position, font, textSize, textColor
 end
 
 local function attachRipple(button)
-	local TweenService = game:GetService("TweenService")
-	local UserInputService = game:GetService("UserInputService")
+	if not rippleEffectsOn then return end
 	button.ClipsDescendants = true
 	button.MouseButton1Down:Connect(function()
 		local absPos = button.AbsolutePosition
@@ -659,6 +665,7 @@ Vynixus.CreateWindow = function(config)
 	window.searchElements = {}
 	window.Theme = config.Theme or "Default"
 	window.Acrylic = config.Acrylic or false
+	rippleEffectsOn = config.rippleEffectsOn or false
 
 	local screenGui = Instance.new("ScreenGui", CoreGui)
 	screenGui.Name = "BetterUI"
@@ -689,6 +696,20 @@ Vynixus.CreateWindow = function(config)
 	mainFrame.Name = "MainFrame"
 	mainFrame.Active = true
 	mainFrame.Visible = false
+
+	local tabSelectedLineMover = createStyledEl("Frame", mainFrame, {
+		size = UDim2.new(0, 4, 0, 21),
+		position = UDim2.new(0, 0, 0.092, 3),
+		backgroundColor = currentThemeData.Accent,
+		backgroundTransparency = 1,
+		transparency = 0.24,
+		cornerRadius = 12,
+		name = "TabLine",
+		theme = {
+			property = "BackgroundColor3",
+			themeProperty = "Accent"
+		}
+	})
 
 	local titleBarFrame = createStyledEl("Frame", mainFrame, {
 		size = UDim2.new(1, 0, 0, 42),
@@ -737,7 +758,8 @@ Vynixus.CreateWindow = function(config)
 		local themeNow = getCurrentTheme()
 		local anchorAbs = anchorButton.AbsolutePosition
 		local mainAbs = mainFrame.AbsolutePosition
-		local relPos = Vector2.new(anchorAbs.X - mainAbs.X, anchorAbs.Y - mainAbs.Y + anchorButton.AbsoluteSize.Y + 2)
+		local anchorSize = anchorButton.AbsoluteSize
+		local relPos = Vector2.new(anchorAbs.X - mainAbs.X, anchorAbs.Y - mainAbs.Y + anchorSize.Y)
 
 		if activeDropdownPopup and activeDropdownPopup.Parent then
 			local sameAnchor = (activeDropdownAnchor == anchorButton)
@@ -750,55 +772,85 @@ Vynixus.CreateWindow = function(config)
 			if sameAnchor then return nil end
 		end
 
-		local popup = createStyledEl("Frame", mainFrame, {
-			size = UDim2.fromOffset(220, 0),
-			backgroundColor = themeNow.MainBG,
-			transparency = window.Acrylic and 0.24 or 0.02,
-			cornerRadius = 6,
-			theme = { property = "BackgroundColor3", themeProperty = "MainBG" }
-		})
-		popup.Position = UDim2.fromOffset(relPos.X - 196, relPos.Y)
-		popup.ZIndex = 60
+		local popup = Instance.new("Frame")
+		popup.Parent = mainFrame
+		popup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+		popup.BackgroundTransparency = 0
+		popup.BorderSizePixel = 0
 		popup.ClipsDescendants = true
+		popup.Position = UDim2.fromOffset(relPos.X, relPos.Y)
+		popup.Size = UDim2.fromOffset(anchorSize.X, 0)
+		popup.ZIndex = 60
+
+		createCorner(popup, 7)
+
 		activeDropdownPopup = popup
 		activeDropdownAnchor = anchorButton
 
-		local list = createScrollingFrame(popup, UDim2.new(1, -8, 1, -8), UDim2.fromOffset(4, 4), themeNow.MainBG, 1)
+		local list = Instance.new("ScrollingFrame")
+		list.Parent = popup
+		list.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+		list.BackgroundTransparency = 1
+		list.BorderSizePixel = 0
+		list.Position = UDim2.new(0, 3, 0, 5)
+		list.Size = UDim2.new(1.01007271, -8, 0.980743229, -8)
 		list.CanvasSize = UDim2.fromScale(0, 0)
-		list.ScrollBarThickness = 4
+		list.ScrollBarThickness = 3
+		list.ScrollBarImageColor3 = themeNow.Accent
 		list.ScrollBarImageTransparency = 0.5
-		registerThemeObject(list, "ScrollBarImageColor3", "Accent")
-		createListLayout(list, 2, Enum.SortOrder.LayoutOrder)
-		createPadding(list, 4, 4, 2, 2)
+
+		createListLayout(list, 3, Enum.SortOrder.LayoutOrder, Enum.VerticalAlignment.Top, Enum.HorizontalAlignment.Center)
+		createPadding(list, 4, 4, 2, 0)
 
 		local totalH = 0
 		for _, text in ipairs(optionTexts) do
-			local item = createStyledEl("TextButton", list, {
-				size = UDim2.new(1, -4, 0, 28),
-				backgroundColor = themeNow.SectionBorder,
-				transparency = window.Acrylic and 0.24 or 0.02,
-				cornerRadius = 4,
-				theme = { property = "BackgroundColor3", themeProperty = "SectionBorder" }
-			})
-			item.Text = text
-			item.Font = Enum.Font.Gotham
-			item.TextColor3 = themeNow.TextColor
-			item.TextSize = 12
-			item.AutoButtonColor = false
+			local isSelected = selectedPredicate(text)
+			local item = Instance.new("TextButton")
+			item.Parent = list
+			item.BackgroundColor3 = isSelected and Color3.fromRGB(90, 90, 90) or Color3.fromRGB(60, 60, 60)
+			item.BackgroundTransparency = 0.7
+			item.BorderSizePixel = 0
+			item.ClipsDescendants = true
+			item.Size = UDim2.new(1.00848591, -4, 0, 28)
 			item.ZIndex = 61
-			applyHoverEffects(item, 0.35, 0.02, 0.02)
-			
-			list.CanvasSize = UDim2.fromScale(0, list.CanvasSize.Y.Scale + 0.28)
+			item.AutoButtonColor = false
+			item.Font = Enum.Font.Gotham
+			item.Text = text
+			item.TextColor3 = Color3.fromRGB(230, 230, 230)
+			item.TextSize = 12
+			item.TextTransparency = 1
 
-			local line = createStyledEl("Frame", item, {
-				size = UDim2.new(0, 3, 1, -6),
-				position = UDim2.fromOffset(2, 3),
-				backgroundColor = themeNow.Accent,
-				transparency = 0.4,
-				cornerRadius = 300,
-				theme = { property = "BackgroundColor3", themeProperty = "Accent" }
-			})
-			line.Visible = selectedPredicate(text)
+			createCorner(item, 6)
+
+			local accentBar = Instance.new("Frame")
+			accentBar.Parent = item
+			accentBar.BackgroundColor3 = Color3.fromRGB(86, 195, 245)
+			accentBar.BackgroundTransparency = isSelected and 0.24 or 0.4
+			accentBar.BorderSizePixel = 0
+			accentBar.Position = isSelected and UDim2.new(0, 0, 0, 5) or UDim2.new(0, 2, 0, 3)
+			accentBar.Size = isSelected and UDim2.new(0, 4, 0.99999994, -10) or UDim2.new(0, 3, 1, -6)
+			accentBar.Visible = isSelected
+			accentBar.ZIndex = 62
+
+			createCorner(accentBar, 12)
+
+			local itemLabel = Instance.new("TextLabel")
+			itemLabel.Parent = item
+			itemLabel.BackgroundTransparency = 1
+			local leftPadding = isSelected and 8 or 8
+			itemLabel.Position = UDim2.new(0, leftPadding, 0, 0)
+			itemLabel.Size = UDim2.new(1, -leftPadding, 1, 0)
+			itemLabel.Font = Enum.Font.Gotham
+			itemLabel.Text = text
+			itemLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			itemLabel.TextSize = 13
+			itemLabel.TextXAlignment = Enum.TextXAlignment.Left
+			itemLabel.TextYAlignment = Enum.TextYAlignment.Center
+			itemLabel.ZIndex = 62
+
+			applyHoverEffects(item, 0.35, 0.7, 0.02)
+
+			list.CanvasSize = UDim2.fromScale(0, list.CanvasSize.Y.Scale + 0.2)
 
 			item.MouseButton1Click:Connect(function()
 				local keepOpen = isMulti and onSelect(text) or (onSelect(text) == true)
@@ -809,7 +861,33 @@ Vynixus.CreateWindow = function(config)
 						if activeDropdownPopup == popup then activeDropdownPopup = nil activeDropdownAnchor = nil end
 					end)
 				else
-					line.Visible = selectedPredicate(text)
+					local nowSelected = selectedPredicate(text)
+					if nowSelected then
+						accentBar.Visible = true
+						accentBar.Size = UDim2.new(0, 0, 0, 0)
+						accentBar.Position = UDim2.new(0, 0, 0.5, 0)
+						accentBar.BackgroundTransparency = 1
+						TweenService:Create(accentBar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+							Size = UDim2.new(0, 4, 0.99999994, -10),
+							Position = UDim2.new(0, 0, 0, 5),
+							BackgroundTransparency = 0.24
+						}):Play()
+					else
+						TweenService:Create(accentBar, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+							Size = UDim2.new(0, 0, 0, 0),
+							Position = UDim2.new(0, 0, 0.5, 0),
+							BackgroundTransparency = 1
+						}):Play()
+						task.delay(0.15, function()
+							if accentBar then
+								accentBar.Visible = false
+							end
+						end)
+					end
+					item.BackgroundColor3 = nowSelected and Color3.fromRGB(90, 90, 90) or Color3.fromRGB(60, 60, 60)
+					local leftPadding = 8
+					itemLabel.Position = UDim2.new(0, leftPadding, 0, 0)
+					itemLabel.Size = UDim2.new(1, -leftPadding, 1, 0)
 				end
 			end)
 
@@ -817,25 +895,10 @@ Vynixus.CreateWindow = function(config)
 		end
 
 		local targetH = math.min(totalH + 8, 200)
-		popup.Size = UDim2.fromOffset(220, 0)
-		TweenService:Create(popup, TweenInfo.new(0.26, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(220, targetH) }):Play()
+		local popupWidth = anchorSize.X
+		popup.Size = UDim2.fromOffset(popupWidth, 0)
+		TweenService:Create(popup, TweenInfo.new(0.26, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(popupWidth, targetH) }):Play()
 
-		local outsideConn
-		outsideConn = UserInputService.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				local pos = UserInputService:GetMouseLocation()
-				local inPopup = popup.AbsolutePosition.X <= pos.X and pos.X <= popup.AbsolutePosition.X + popup.AbsoluteSize.X
-					and popup.AbsolutePosition.Y <= pos.Y and pos.Y <= popup.AbsolutePosition.Y + popup.AbsoluteSize.Y
-				if not inPopup then
-					outsideConn:Disconnect()
-					TweenService:Create(popup, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Size = UDim2.fromOffset(popup.Size.X.Offset, 0), BackgroundTransparency = 1 }):Play()
-					task.delay(0.2, function()
-						if popup and popup.Parent then popup:Destroy() end
-						if activeDropdownPopup == popup then activeDropdownPopup = nil activeDropdownAnchor = nil end
-					end)
-				end
-			end
-		end)
 
 		return popup
 	end
@@ -914,6 +977,8 @@ Vynixus.CreateWindow = function(config)
 		end
 	end
 
+	local tabButtonLines = {}
+
 	function window:CreateTab(name, icon)
 		if not name or name == "" then
 			return nil
@@ -925,7 +990,7 @@ Vynixus.CreateWindow = function(config)
 
 		local tabButton = createStyledEl("TextButton", tabScroll, {
 			size = UDim2.new(1, 0, 0, 34),
-			backgroundColor = currentThemeData.TabUnselected,
+			backgroundColor = Color3.fromRGB(90, 90, 90),
 			transparency = 1,
 			cornerRadius = 6,
 			hoverEffects = {
@@ -939,6 +1004,18 @@ Vynixus.CreateWindow = function(config)
 			}
 		})
 		tabButton.LayoutOrder = tabIndex
+		local tabSelectedLineGuider = createStyledEl("Frame", tabButton, {
+			size = UDim2.new(0, 4, 0, 21),
+			position = UDim2.new(0, 0, 0.092, 3),
+			backgroundColor = currentThemeData.Accent,
+			transparency = 1,
+			cornerRadius = 12,
+			Name = "TabLine",
+			theme = {
+				property = "BackgroundColor3",
+				themeProperty = "Accent"
+			}
+		})
 
 		local tabLabel = createStyledEl("TextLabel", tabButton, {
 			text = name,
@@ -990,19 +1067,44 @@ Vynixus.CreateWindow = function(config)
 		end
 
 		tabButton.MouseEnter:Connect(function()
-			setTransparency(tab.Selected and 0.85 or 0.89)
+			setTransparency(tab.Selected and 0.65 or 0.89)
 		end)
 
 		tabButton.MouseLeave:Connect(function()
-			setTransparency(tab.Selected and 0.89 or 1)
+			setTransparency(tab.Selected and 0.65 or 1)
 		end)
 
 		tabButton.MouseButton1Down:Connect(function()
-			setTransparency(0.92)
+			setTransparency(tab.Selected and 0.65 or 0.89)
 		end)
 
 		tabButton.MouseButton1Up:Connect(function()
-			setTransparency(tab.Selected and 0.85 or 0.89)
+			setTransparency(tab.Selected and 0.65 or 0.89)
+			if tab.Selected then
+				local tabLineTravelSpeed = 0.275
+
+				tabSelectedLineMover.Transparency = 0.24
+				local oldTabButtonLine = tabButtonLines[1]
+				if oldTabButtonLine then
+					oldTabButtonLine.Transparency = 1
+					oldTabButtonLine = nil
+				end
+
+				table.clear(tabButtonLines)
+
+				local guiderAbsolutePos = tabSelectedLineGuider.AbsolutePosition
+				local mainFrameAbsolutePos = mainFrame.AbsolutePosition
+
+				local offsetX = guiderAbsolutePos.X - mainFrameAbsolutePos.X
+				local offsetY = guiderAbsolutePos.Y - mainFrameAbsolutePos.Y
+
+				local targetPosition = UDim2.new(0, offsetX, 0, offsetY)
+				tweenProperty(tabSelectedLineMover, "Position", targetPosition, tabLineTravelSpeed, Enum.EasingStyle.Quad)
+				task.wait(tabLineTravelSpeed)
+				tabSelectedLineMover.Transparency = 1
+				tabSelectedLineGuider.Transparency = 0.24
+				table.insert(tabButtonLines, tabSelectedLineGuider)
+			end
 		end)
 
 		tabButton.MouseButton1Click:Connect(function()
@@ -1578,25 +1680,47 @@ Vynixus.CreateWindow = function(config)
 				descLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-			local dropdownButton = createStyledEl("TextButton", dropdownFrame, {
-				size = UDim2.fromOffset(24, 27),
-				position = UDim2.new(1, -10, 0, 21),
-				backgroundColor = currentThemeData.ElementColor,
-				transparency = 1,
-				cornerRadius = 4,
-				noRipple = true,
-				theme = {
-					property = "BackgroundColor3",
-					themeProperty = "ElementColor"
-				}
-			})
+			local dropdownButton = Instance.new("TextButton")
+			dropdownButton.Parent = dropdownFrame
 			dropdownButton.AnchorPoint = Vector2.new(1, 0.5)
+			dropdownButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+			dropdownButton.BackgroundTransparency = 0.7
+			dropdownButton.BorderSizePixel = 0
+			dropdownButton.ClipsDescendants = true
+			dropdownButton.Position = UDim2.new(0.967729509, -10, 0.109851979, 21)
+			dropdownButton.Size = UDim2.new(0, 163, 0, 33)
+			dropdownButton.AutoButtonColor = false
 			dropdownButton.Font = Enum.Font.Cartoon
 			dropdownButton.Text = "<"
-			dropdownButton.TextColor3 = currentThemeData.TextColor
+			dropdownButton.TextColor3 = Color3.fromRGB(230, 230, 230)
 			dropdownButton.TextSize = 19
-			dropdownButton.Rotation = -90
-			dropdownButton.AutoButtonColor = false
+			dropdownButton.TextTransparency = 1
+
+			local buttonCorner = Instance.new("UICorner")
+			buttonCorner.Parent = dropdownButton
+			buttonCorner.CornerRadius = UDim.new(0, 4)
+
+			local buttonNameLabel = Instance.new("TextLabel")
+			buttonNameLabel.Parent = dropdownButton
+			buttonNameLabel.BackgroundTransparency = 1
+			buttonNameLabel.Position = UDim2.new(0.047537718, 0, 0.234608039, 0)
+			buttonNameLabel.Size = UDim2.new(0.970520854, 0, 0.0711563602, 14)
+			buttonNameLabel.Font = Enum.Font.GothamMedium
+			buttonNameLabel.Text = text
+			buttonNameLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+			buttonNameLabel.TextSize = 13
+			buttonNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			local buttonArrowLabel = Instance.new("TextLabel")
+			buttonArrowLabel.Parent = dropdownButton
+			buttonArrowLabel.BackgroundTransparency = 1
+			buttonArrowLabel.Position = UDim2.new(0.854965091, 0, 0.239690602, 0)
+			buttonArrowLabel.Size = UDim2.new(0.127813578, 0, 0.0711563602, 14)
+			buttonArrowLabel.Font = Enum.Font.GothamBold
+			buttonArrowLabel.Text = "V"
+			buttonArrowLabel.TextColor3 = Color3.fromRGB(144, 144, 144)
+			buttonArrowLabel.TextSize = 13
+			buttonArrowLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 			local function openDropdown()
 				createDropdownPopup(dropdownButton, options, function(txt) return selectedOption == txt end, function(choice)
@@ -1705,25 +1829,47 @@ Vynixus.CreateWindow = function(config)
 				descLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-			local multiDropdownButton = createStyledEl("TextButton", multiDropdownFrame, {
-				size = UDim2.fromOffset(24, 27),
-				position = UDim2.new(1, -10, 0, 21),
-				backgroundColor = currentThemeData.ElementColor,
-				transparency = 1,
-				cornerRadius = 4,
-				noRipple = true,
-				theme = {
-					property = "BackgroundColor3",
-					themeProperty = "ElementColor"
-				}
-			})
+			local multiDropdownButton = Instance.new("TextButton")
+			multiDropdownButton.Parent = multiDropdownFrame
 			multiDropdownButton.AnchorPoint = Vector2.new(1, 0.5)
+			multiDropdownButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+			multiDropdownButton.BackgroundTransparency = 0.7
+			multiDropdownButton.BorderSizePixel = 0
+			multiDropdownButton.ClipsDescendants = true
+			multiDropdownButton.Position = UDim2.new(0.967729509, -10, 0.109851979, 21)
+			multiDropdownButton.Size = UDim2.new(0, 163, 0, 33)
+			multiDropdownButton.AutoButtonColor = false
 			multiDropdownButton.Font = Enum.Font.Cartoon
 			multiDropdownButton.Text = "<"
-			multiDropdownButton.TextColor3 = currentThemeData.TextColor
+			multiDropdownButton.TextColor3 = Color3.fromRGB(230, 230, 230)
 			multiDropdownButton.TextSize = 19
-			multiDropdownButton.Rotation = -90
-			multiDropdownButton.AutoButtonColor = false
+			multiDropdownButton.TextTransparency = 1
+
+			local multiButtonCorner = Instance.new("UICorner")
+			multiButtonCorner.Parent = multiDropdownButton
+			multiButtonCorner.CornerRadius = UDim.new(0, 4)
+
+			local multiButtonNameLabel = Instance.new("TextLabel")
+			multiButtonNameLabel.Parent = multiDropdownButton
+			multiButtonNameLabel.BackgroundTransparency = 1
+			multiButtonNameLabel.Position = UDim2.new(0.047537718, 0, 0.234608039, 0)
+			multiButtonNameLabel.Size = UDim2.new(0.970520854, 0, 0.0711563602, 14)
+			multiButtonNameLabel.Font = Enum.Font.GothamMedium
+			multiButtonNameLabel.Text = text
+			multiButtonNameLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+			multiButtonNameLabel.TextSize = 13
+			multiButtonNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			local multiButtonArrowLabel = Instance.new("TextLabel")
+			multiButtonArrowLabel.Parent = multiDropdownButton
+			multiButtonArrowLabel.BackgroundTransparency = 1
+			multiButtonArrowLabel.Position = UDim2.new(0.854965091, 0, 0.239690602, 0)
+			multiButtonArrowLabel.Size = UDim2.new(0.127813578, 0, 0.0711563602, 14)
+			multiButtonArrowLabel.Font = Enum.Font.GothamBold
+			multiButtonArrowLabel.Text = "V"
+			multiButtonArrowLabel.TextColor3 = Color3.fromRGB(144, 144, 144)
+			multiButtonArrowLabel.TextSize = 13
+			multiButtonArrowLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 			local function openMultiDropdown()
 				createDropdownPopup(multiDropdownButton, options, function(txt) return selectedOptions[txt] == true end, function(choice)
@@ -2326,8 +2472,8 @@ Vynixus.CreateWindow = function(config)
 				local currentSliderValue = initialValue
 				local dragging = false
 
-				local function updateSlider(input)
-					local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+				local function updateSlider(mousePos)
+					local pos = math.clamp((mousePos.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
 					currentSliderValue = math.floor(pos * 255 + 0.5)
 					currentSliderValue = math.clamp(currentSliderValue, 0, 255)
 
@@ -2358,12 +2504,13 @@ Vynixus.CreateWindow = function(config)
 
 				UserInputService.InputChanged:Connect(function(input)
 					if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-						updateSlider(input)
+						updateSlider(input.Position)
 					end
 				end)
 
-				sliderButton.MouseButton1Click:Connect(function(input)
-					updateSlider(input)
+				sliderButton.MouseButton1Click:Connect(function()
+					local mousePos = UserInputService:GetMouseLocation()
+					updateSlider(mousePos)
 				end)
 
 				sliderValue.FocusLost:Connect(function()

@@ -1,7 +1,7 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.2.0
+    Build 1.2.1
     Date: 2025-10-31
     Changelogs:
     - Added animation for tab selection indicator line
@@ -11,6 +11,8 @@
     - Removed auto-close on outside click for dropdowns
     - Fixed RGB picker slider click handler bug
     - Added ripple effects option when calling UI Library
+    - Made dropdown toggle buttons and popups follow current theme colors
+    - Updated dropdown toggle button text to show selected option instead of dropdown title (single dropdowns only)
 ]]
 
 if VYNIXUS_LOADED then
@@ -774,13 +776,15 @@ Vynixus.CreateWindow = function(config)
 
 		local popup = Instance.new("Frame")
 		popup.Parent = mainFrame
-		popup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-		popup.BackgroundTransparency = 0
+		popup.BackgroundColor3 = themeNow.SectionBG
+		popup.BackgroundTransparency = window.Acrylic and 0.24 or 0.02
 		popup.BorderSizePixel = 0
 		popup.ClipsDescendants = true
 		popup.Position = UDim2.fromOffset(relPos.X, relPos.Y)
 		popup.Size = UDim2.fromOffset(anchorSize.X, 0)
 		popup.ZIndex = 60
+
+		registerThemeObject(popup, "BackgroundColor3", "SectionBG")
 
 		createCorner(popup, 7)
 
@@ -789,7 +793,7 @@ Vynixus.CreateWindow = function(config)
 
 		local list = Instance.new("ScrollingFrame")
 		list.Parent = popup
-		list.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+		list.BackgroundColor3 = themeNow.SectionBG
 		list.BackgroundTransparency = 1
 		list.BorderSizePixel = 0
 		list.Position = UDim2.new(0, 3, 0, 5)
@@ -807,7 +811,7 @@ Vynixus.CreateWindow = function(config)
 			local isSelected = selectedPredicate(text)
 			local item = Instance.new("TextButton")
 			item.Parent = list
-			item.BackgroundColor3 = isSelected and Color3.fromRGB(90, 90, 90) or Color3.fromRGB(60, 60, 60)
+			item.BackgroundColor3 = isSelected and themeNow.ElementColor or themeNow.SectionBorder
 			item.BackgroundTransparency = 0.7
 			item.BorderSizePixel = 0
 			item.ClipsDescendants = true
@@ -816,7 +820,7 @@ Vynixus.CreateWindow = function(config)
 			item.AutoButtonColor = false
 			item.Font = Enum.Font.Gotham
 			item.Text = text
-			item.TextColor3 = Color3.fromRGB(230, 230, 230)
+			item.TextColor3 = themeNow.TextColor
 			item.TextSize = 12
 			item.TextTransparency = 1
 
@@ -824,13 +828,15 @@ Vynixus.CreateWindow = function(config)
 
 			local accentBar = Instance.new("Frame")
 			accentBar.Parent = item
-			accentBar.BackgroundColor3 = Color3.fromRGB(86, 195, 245)
+			accentBar.BackgroundColor3 = themeNow.Accent
 			accentBar.BackgroundTransparency = isSelected and 0.24 or 0.4
 			accentBar.BorderSizePixel = 0
 			accentBar.Position = isSelected and UDim2.new(0, 0, 0, 5) or UDim2.new(0, 2, 0, 3)
 			accentBar.Size = isSelected and UDim2.new(0, 4, 0.99999994, -10) or UDim2.new(0, 3, 1, -6)
 			accentBar.Visible = isSelected
 			accentBar.ZIndex = 62
+
+			registerThemeObject(accentBar, "BackgroundColor3", "Accent")
 
 			createCorner(accentBar, 12)
 
@@ -842,11 +848,13 @@ Vynixus.CreateWindow = function(config)
 			itemLabel.Size = UDim2.new(1, -leftPadding, 1, 0)
 			itemLabel.Font = Enum.Font.Gotham
 			itemLabel.Text = text
-			itemLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			itemLabel.TextColor3 = themeNow.TextColor
 			itemLabel.TextSize = 13
 			itemLabel.TextXAlignment = Enum.TextXAlignment.Left
 			itemLabel.TextYAlignment = Enum.TextYAlignment.Center
 			itemLabel.ZIndex = 62
+
+			registerThemeObject(itemLabel, "TextColor3", "TextColor")
 
 			applyHoverEffects(item, 0.35, 0.7, 0.02)
 
@@ -884,7 +892,8 @@ Vynixus.CreateWindow = function(config)
 							end
 						end)
 					end
-					item.BackgroundColor3 = nowSelected and Color3.fromRGB(90, 90, 90) or Color3.fromRGB(60, 60, 60)
+					local themeNow = getCurrentTheme()
+					item.BackgroundColor3 = nowSelected and themeNow.ElementColor or themeNow.SectionBorder
 					local leftPadding = 8
 					itemLabel.Position = UDim2.new(0, leftPadding, 0, 0)
 					itemLabel.Size = UDim2.new(1, -leftPadding, 1, 0)
@@ -1683,16 +1692,16 @@ Vynixus.CreateWindow = function(config)
 			local dropdownButton = Instance.new("TextButton")
 			dropdownButton.Parent = dropdownFrame
 			dropdownButton.AnchorPoint = Vector2.new(1, 0.5)
-			dropdownButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+			dropdownButton.BackgroundColor3 = currentThemeData.ElementColor
 			dropdownButton.BackgroundTransparency = 0.7
 			dropdownButton.BorderSizePixel = 0
 			dropdownButton.ClipsDescendants = true
-			dropdownButton.Position = UDim2.new(0.967729509, -10, 0.109851979, 21)
+			dropdownButton.Position = UDim2.new(1, -10, 0.5, 0)
 			dropdownButton.Size = UDim2.new(0, 163, 0, 33)
 			dropdownButton.AutoButtonColor = false
 			dropdownButton.Font = Enum.Font.Cartoon
 			dropdownButton.Text = "<"
-			dropdownButton.TextColor3 = Color3.fromRGB(230, 230, 230)
+			dropdownButton.TextColor3 = currentThemeData.TextColor
 			dropdownButton.TextSize = 19
 			dropdownButton.TextTransparency = 1
 
@@ -1706,10 +1715,13 @@ Vynixus.CreateWindow = function(config)
 			buttonNameLabel.Position = UDim2.new(0.047537718, 0, 0.234608039, 0)
 			buttonNameLabel.Size = UDim2.new(0.970520854, 0, 0.0711563602, 14)
 			buttonNameLabel.Font = Enum.Font.GothamMedium
-			buttonNameLabel.Text = text
-			buttonNameLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+			buttonNameLabel.Text = selectedOption
+			buttonNameLabel.TextColor3 = currentThemeData.TextColor
 			buttonNameLabel.TextSize = 13
 			buttonNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			registerThemeObject(dropdownButton, "BackgroundColor3", "ElementColor")
+			registerThemeObject(buttonNameLabel, "TextColor3", "TextColor")
 
 			local buttonArrowLabel = Instance.new("TextLabel")
 			buttonArrowLabel.Parent = dropdownButton
@@ -1718,13 +1730,16 @@ Vynixus.CreateWindow = function(config)
 			buttonArrowLabel.Size = UDim2.new(0.127813578, 0, 0.0711563602, 14)
 			buttonArrowLabel.Font = Enum.Font.GothamBold
 			buttonArrowLabel.Text = "V"
-			buttonArrowLabel.TextColor3 = Color3.fromRGB(144, 144, 144)
+			buttonArrowLabel.TextColor3 = currentThemeData.SubTextColor
 			buttonArrowLabel.TextSize = 13
 			buttonArrowLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			registerThemeObject(buttonArrowLabel, "TextColor3", "SubTextColor")
 
 			local function openDropdown()
 				createDropdownPopup(dropdownButton, options, function(txt) return selectedOption == txt end, function(choice)
 					selectedOption = choice
+					buttonNameLabel.Text = selectedOption
 					if callback then callback(selectedOption) end
 				end, false)
 			end
@@ -1733,6 +1748,7 @@ Vynixus.CreateWindow = function(config)
 
 			function dropdown:SetValue(value)
 				selectedOption = value
+				buttonNameLabel.Text = selectedOption
 			end
 
 			return dropdown
@@ -1832,16 +1848,16 @@ Vynixus.CreateWindow = function(config)
 			local multiDropdownButton = Instance.new("TextButton")
 			multiDropdownButton.Parent = multiDropdownFrame
 			multiDropdownButton.AnchorPoint = Vector2.new(1, 0.5)
-			multiDropdownButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+			multiDropdownButton.BackgroundColor3 = currentThemeData.ElementColor
 			multiDropdownButton.BackgroundTransparency = 0.7
 			multiDropdownButton.BorderSizePixel = 0
 			multiDropdownButton.ClipsDescendants = true
-			multiDropdownButton.Position = UDim2.new(0.967729509, -10, 0.109851979, 21)
+			multiDropdownButton.Position = UDim2.new(1, -10, 0.5, 0)
 			multiDropdownButton.Size = UDim2.new(0, 163, 0, 33)
 			multiDropdownButton.AutoButtonColor = false
 			multiDropdownButton.Font = Enum.Font.Cartoon
 			multiDropdownButton.Text = "<"
-			multiDropdownButton.TextColor3 = Color3.fromRGB(230, 230, 230)
+			multiDropdownButton.TextColor3 = currentThemeData.TextColor
 			multiDropdownButton.TextSize = 19
 			multiDropdownButton.TextTransparency = 1
 
@@ -1856,9 +1872,12 @@ Vynixus.CreateWindow = function(config)
 			multiButtonNameLabel.Size = UDim2.new(0.970520854, 0, 0.0711563602, 14)
 			multiButtonNameLabel.Font = Enum.Font.GothamMedium
 			multiButtonNameLabel.Text = text
-			multiButtonNameLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+			multiButtonNameLabel.TextColor3 = currentThemeData.TextColor
 			multiButtonNameLabel.TextSize = 13
 			multiButtonNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			registerThemeObject(multiDropdownButton, "BackgroundColor3", "ElementColor")
+			registerThemeObject(multiButtonNameLabel, "TextColor3", "TextColor")
 
 			local multiButtonArrowLabel = Instance.new("TextLabel")
 			multiButtonArrowLabel.Parent = multiDropdownButton
@@ -1867,9 +1886,11 @@ Vynixus.CreateWindow = function(config)
 			multiButtonArrowLabel.Size = UDim2.new(0.127813578, 0, 0.0711563602, 14)
 			multiButtonArrowLabel.Font = Enum.Font.GothamBold
 			multiButtonArrowLabel.Text = "V"
-			multiButtonArrowLabel.TextColor3 = Color3.fromRGB(144, 144, 144)
+			multiButtonArrowLabel.TextColor3 = currentThemeData.SubTextColor
 			multiButtonArrowLabel.TextSize = 13
 			multiButtonArrowLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			registerThemeObject(multiButtonArrowLabel, "TextColor3", "SubTextColor")
 
 			local function openMultiDropdown()
 				createDropdownPopup(multiDropdownButton, options, function(txt) return selectedOptions[txt] == true end, function(choice)

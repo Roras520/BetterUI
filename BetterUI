@@ -1,7 +1,7 @@
 --[[
     Better UI library
     Created by Stacm/Stack
-    Build 1.2.1
+    Build 1.2.0
     Date: 2025-10-31
     Changelogs:
     - Added animation for tab selection indicator line
@@ -612,21 +612,67 @@ local currentBlurObject = nil
 
 Vynixus.SetTheme = SetTheme
 
+-- Helper function to load module from marketplace asset ID
+-- Note: This may not work for all assets due to Roblox security restrictions
+local function loadFromMarketplace(assetId)
+	local success, moduleCode = pcall(function()
+		-- Try the asset delivery API
+		local url = "https://assetdelivery.roblox.com/v1/asset?id=" .. tostring(assetId)
+		local response = game:HttpGet(url, true)
+		if response and response ~= "" then
+			return loadstring(response)()
+		end
+	end)
+	
+	if success and moduleCode then
+		return moduleCode
+	end
+	
+	-- Fallback: Try alternative marketplace URL format (may not work)
+	success, moduleCode = pcall(function()
+		local url = "https://www.roblox.com/asset/?id=" .. tostring(assetId)
+		local response = game:HttpGet(url, true)
+		if response and response ~= "" then
+			return loadstring(response)()
+		end
+	end)
+	
+	return success and moduleCode or nil
+end
+
 function Vynixus.SetAcrylic(enabled)
 	acrylicEnabled = enabled
 
 	if enabled and not BlurredGui then
-		local success, module = pcall(function()
-			BlurredGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur"))()
-		end)
+		local sources = {
+			"https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur",
+		}
+		
+		local loaded = false
 
-		if not success or module == nil then
-			BlurredGui = require(script.Parent.AcrylicModule)
-			if BlurredGui == nil then
-				warn("Failed to apply acrylic: Acrylic module not found.")
-				acrylicEnabled = false
-				return
+		for _, sourceUrl in ipairs(sources) do
+			local success, result = pcall(function()
+				local moduleCode = game:HttpGet(sourceUrl, true)
+				if moduleCode and moduleCode ~= "" then
+					BlurredGui = loadstring(moduleCode)()
+					if BlurredGui and type(BlurredGui) == "table" and BlurredGui.new then
+						loaded = true
+						return true
+					end
+				end
+			end)
+			
+			if loaded then
+				break
 			end
+		end
+		
+		if not loaded and BlurredGui == nil then
+			-- If this issue persists, I'm going to embed the module code directly into the source code.
+			warn("Failed to apply acrylic: Could not load Acrylic module from any source.")
+			warn("Make sure you have an active internet connection.")
+			acrylicEnabled = false
+			return
 		end
 	end
 

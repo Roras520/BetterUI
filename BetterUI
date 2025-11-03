@@ -1,7 +1,7 @@
 --[[
     Vynixus UI Library (Renamed from BetterUI)
     Created by Stacm/Stack
-    Build 1.4.2
+    Build 1.4.3
     Date: 2025-11-03
     Changelogs:
     - Unified object creation/signals via Creator helpers (gpt idea)
@@ -22,6 +22,7 @@
 	- Fixed stack overflow error
 	- Removed the high background transparency on dropdown popups when using acrylic
 	- Fixed SafeLoad function trying to load the hardcoded module source first instead of loading from link
+	- Polished Tab AccentBar Animations
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -1157,6 +1158,20 @@ local function CreateWindow(Config)
 	MainFrame.Active = true
 	MainFrame.Visible = false
 
+	local TabLineTopDot = createStyledEl("Frame", MainFrame, {
+		size = UDim2.new(0, 4, 0, 0),
+		position = UDim2.new(0.017, 0, 0.103, 3),
+		transparency = 1,
+		name = "TabLineTopDot"
+	})
+
+	local TabLineBottomDot = createStyledEl("Frame", MainFrame, {
+		size = UDim2.new(0, 4, 0, 0),
+		position = UDim2.new(0.017, 0, 0.103, 24),
+		transparency = 1,
+		name = "TabLineBottomDot"
+	})
+
 	local TabSelectedLineMover = createStyledEl("Frame", MainFrame, {
 		size = UDim2.new(0, 4, 0, 21),
 		position = UDim2.new(0.017, 0, 0.103, 3),
@@ -1237,16 +1252,16 @@ local function CreateWindow(Config)
 			end
 		end
 
-	local Popup = Creator.New("Frame", {
-		Parent = MainFrame,
-		BackgroundColor3 = ThemeNow.SectionBG,
-		BackgroundTransparency = 0.02,
-		BorderSizePixel = 0,
-		ClipsDescendants = true,
-		Position = UDim2.fromOffset(RelPos.X, RelPos.Y),
-		Size = UDim2.fromOffset(AnchorSize.X, 0),
-		ZIndex = 60,
-	})
+		local Popup = Creator.New("Frame", {
+			Parent = MainFrame,
+			BackgroundColor3 = ThemeNow.SectionBG,
+			BackgroundTransparency = 0.02,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Position = UDim2.fromOffset(RelPos.X, RelPos.Y),
+			Size = UDim2.fromOffset(AnchorSize.X, 0),
+			ZIndex = 60,
+		})
 
 		registerThemeObject(Popup, "BackgroundColor3", "SectionBG")
 		createCorner(Popup, 7)
@@ -1530,15 +1545,15 @@ local function CreateWindow(Config)
 		end
 	end)
 
-CloseButton.MouseButton1Click:Connect(function()
-	if Vynixus.Destroy then
-		Vynixus.Destroy()
-	else
-		if ScreenGui and ScreenGui.Parent then
-			ScreenGui:Destroy()
+	CloseButton.MouseButton1Click:Connect(function()
+		if Vynixus.Destroy then
+			Vynixus.Destroy()
+		else
+			if ScreenGui and ScreenGui.Parent then
+				ScreenGui:Destroy()
+			end
 		end
-	end
-end)
+	end)
 
 	local TitleBarLine = createStyledEl("Frame", TitleBarFrame, {
 		size = UDim2.new(1, 0, 0, 1),
@@ -2302,26 +2317,26 @@ end)
 				DescLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-		local DropdownButton = Creator.New("TextButton", {
-			Parent = DropdownFrame,
-			AnchorPoint = Vector2.new(1, 0.5),
-			BackgroundColor3 = CurrentThemeData.ElementColor,
-			BackgroundTransparency = Window.Acrylic and 0.3 or (CurrentThemeData.DropdownButtonTransparency or 0.7),
-			BorderSizePixel = 0,
-			ClipsDescendants = true,
-			Position = UDim2.new(1, -10, 0.5, 0),
-			Size = UDim2.new(0, 163, 0, 33),
-			AutoButtonColor = false,
-			Font = Enum.Font.Cartoon,
-			Text = "<",
-			TextColor3 = CurrentThemeData.TextColor,
-			TextSize = 19,
-			TextTransparency = 1,
-		}, {
-			Creator.New("UICorner", {
-				CornerRadius = UDim.new(0, 4),
-			}),
-		})
+			local DropdownButton = Creator.New("TextButton", {
+				Parent = DropdownFrame,
+				AnchorPoint = Vector2.new(1, 0.5),
+				BackgroundColor3 = CurrentThemeData.ElementColor,
+				BackgroundTransparency = Window.Acrylic and 0.3 or (CurrentThemeData.DropdownButtonTransparency or 0.7),
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Position = UDim2.new(1, -10, 0.5, 0),
+				Size = UDim2.new(0, 163, 0, 33),
+				AutoButtonColor = false,
+				Font = Enum.Font.Cartoon,
+				Text = "<",
+				TextColor3 = CurrentThemeData.TextColor,
+				TextSize = 19,
+				TextTransparency = 1,
+			}, {
+				Creator.New("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				}),
+			})
 
 			pcall(function()
 				attachRipple(DropdownButton)
@@ -2473,26 +2488,26 @@ end)
 				DescLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-		local MultiDropdownButton = Creator.New("TextButton", {
-			Parent = MultiDropdownFrame,
-			AnchorPoint = Vector2.new(1, 0.5),
-			BackgroundColor3 = CurrentThemeData.ElementColor,
-			BackgroundTransparency = Window.Acrylic and 0.3 or 0.7,
-			BorderSizePixel = 0,
-			ClipsDescendants = true,
-			Position = UDim2.new(1, -10, 0.5, 0),
-			Size = UDim2.new(0, 163, 0, 33),
-			AutoButtonColor = false,
-			Font = Enum.Font.Cartoon,
-			Text = "<",
-			TextColor3 = CurrentThemeData.TextColor,
-			TextSize = 19,
-			TextTransparency = 1,
-		}, {
-			Creator.New("UICorner", {
-				CornerRadius = UDim.new(0, 4),
-			}),
-		})
+			local MultiDropdownButton = Creator.New("TextButton", {
+				Parent = MultiDropdownFrame,
+				AnchorPoint = Vector2.new(1, 0.5),
+				BackgroundColor3 = CurrentThemeData.ElementColor,
+				BackgroundTransparency = Window.Acrylic and 0.3 or 0.7,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Position = UDim2.new(1, -10, 0.5, 0),
+				Size = UDim2.new(0, 163, 0, 33),
+				AutoButtonColor = false,
+				Font = Enum.Font.Cartoon,
+				Text = "<",
+				TextColor3 = CurrentThemeData.TextColor,
+				TextSize = 19,
+				TextTransparency = 1,
+			}, {
+				Creator.New("UICorner", {
+					CornerRadius = UDim.new(0, 4),
+				}),
+			})
 
 			pcall(function()
 				attachRipple(MultiDropdownButton)
@@ -3318,35 +3333,55 @@ end)
 			local OffsetY = GuiderAbsolutePos.Y - MainFrameAbsolutePos.Y
 			local TargetHeight = GuiderAbsoluteSize.Y
 
-			local oldY = TabSelectedLineMover.AbsolutePosition.Y
-			local newY = OffsetY
+			local targetTop = UDim2.new(0, OffsetX, 0, OffsetY)
+			local targetBottom = UDim2.new(0, OffsetX, 0, OffsetY + TargetHeight)
 
-			local movingDown = newY > oldY
+			local currentTopY = TabLineTopDot.Position.Y.Offset
+			local currentBottomY = TabLineBottomDot.Position.Y.Offset
 
-			TabSelectedLineMover.AnchorPoint = movingDown and Vector2.new(0, 1) or Vector2.new(0, 0)
-
-			local TargetPosition
-			if movingDown then
-				TargetPosition = UDim2.new(0, OffsetX, 0, OffsetY + TargetHeight)
-			else
-				TargetPosition = UDim2.new(0, OffsetX, 0, OffsetY)
+			if currentTopY == 0 and currentBottomY == 0 then
+				TabLineTopDot.Position = targetTop
+				TabLineBottomDot.Position = targetBottom
+				TabSelectedLineMover.Position = targetTop
+				TabSelectedLineMover.Size = UDim2.new(0, 4, 0, TargetHeight)
 			end
 
-			local TargetSize = UDim2.new(0, 4, 0, TargetHeight)
-			local OvershootSize = UDim2.new(0, 4, 0, TargetHeight + 6)
+			local EasingStyle = Enum.EasingStyle.Quad
+			local Speed = 0.22
 
-			tweenProperty(TabSelectedLineMover, "Position", TargetPosition, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-			tweenProperty(TabSelectedLineMover, "Size", OvershootSize, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			local movingUp = OffsetY < (currentTopY ~= 0 and currentTopY or OffsetY)
 
-			task.delay(0.15, function()
-				tweenProperty(TabSelectedLineMover, "Size", TargetSize, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-			end)
-				task.delay(0.5, function()
+			if movingUp then
+				tweenProperty(TabLineTopDot, "Position", targetTop, Speed, EasingStyle)
+				local currentBottom = currentBottomY ~= 0 and currentBottomY or (OffsetY + TargetHeight)
+				local phase1Height = currentBottom - OffsetY
+				if phase1Height < 0 then phase1Height = TargetHeight end
+				tweenProperty(TabSelectedLineMover, "Position", targetTop, Speed, EasingStyle)
+				tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, phase1Height + 4), Speed, EasingStyle)
+
+				task.delay(0.1, function()
+					tweenProperty(TabLineBottomDot, "Position", targetBottom, Speed, EasingStyle)
+					tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, TargetHeight), Speed, EasingStyle)
+				end)
+			else
+				tweenProperty(TabLineBottomDot, "Position", targetBottom, Speed, EasingStyle)
+				local phase1Height = (OffsetY + TargetHeight) - (currentTopY ~= 0 and currentTopY or OffsetY)
+				if phase1Height < 0 then phase1Height = TargetHeight end
+				tweenProperty(TabSelectedLineMover, "Position", UDim2.new(0, OffsetX, 0, currentTopY ~= 0 and currentTopY or OffsetY), Speed, EasingStyle)
+				tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, phase1Height + 4), Speed, EasingStyle)
+
+				task.delay(0.1, function()
+					tweenProperty(TabLineTopDot, "Position", targetTop, Speed, EasingStyle)
+					tweenProperty(TabSelectedLineMover, "Position", targetTop, Speed, EasingStyle)
+					tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, TargetHeight), Speed, EasingStyle)
+				end)
+			end
+
+			task.delay(0.5, function()
 				TabSelectedLineMover.BackgroundTransparency = 1
 				TabButtonIndicatorGuider.BackgroundTransparency = 0.24
 				table.insert(TabButtonLines, TabButtonIndicatorGuider)
 			end)
-
 
 			LastTabSwitch = tick()
 

@@ -3376,21 +3376,31 @@ end)
 end
 
 Vynixus.CreateWindow = CreateWindow
-Vynixus.Notifications = MODULES.Notifications()
-local OriginalSendNotification = Vynixus.Notifications.SendNotification
-local OriginalClearNotifications = Vynixus.Notifications.ClearNotifications
-local OriginalGetNotificationSettings = Vynixus.Notifications.GetNotificationSettings
 
-Vynixus.SendNotification = function(message, titleText)
-	OriginalSendNotification(message, titleText)
-end
-
-Vynixus.ClearNotifications = function()
-	OriginalClearNotifications()
-end
-
-Vynixus.GetNotificationSettings = function()
-	return OriginalGetNotificationSettings()
+local NotificationsModule = MODULES.Notifications()
+if NotificationsModule and type(NotificationsModule) == "table" then
+	Vynixus.Notifications = NotificationsModule
+	Vynixus.SendNotification = function(message, titleText)
+		if Vynixus.Notifications and Vynixus.Notifications.SendNotification then
+			Vynixus.Notifications.SendNotification(message, titleText)
+		end
+	end
+	Vynixus.ClearNotifications = function()
+		if Vynixus.Notifications and Vynixus.Notifications.ClearNotifications then
+			Vynixus.Notifications.ClearNotifications()
+		end
+	end
+	Vynixus.GetNotificationSettings = function()
+		if Vynixus.Notifications and Vynixus.Notifications.GetNotificationSettings then
+			return Vynixus.Notifications.GetNotificationSettings()
+		end
+	end
+else
+	warn("Failed to load Notifications module")
+	Vynixus.Notifications = {}
+	Vynixus.SendNotification = function() end
+	Vynixus.ClearNotifications = function() end
+	Vynixus.GetNotificationSettings = function() return {} end
 end
 
 return Vynixus

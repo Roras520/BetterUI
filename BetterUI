@@ -11,11 +11,11 @@
     - Tab indicator: improved animation with overshoot, also fixed accent bar duplication bug
     - Tabs: anti-spam rate limit for switching
     - Ripple: corrected mouse positioning (Gui inset) and smoother animation
-    - Dropdowns: hidden scrollbar
+    - Dropdowns: theme-aware, hidden scrollbars, ripple on button, shows selected
     - Multi-dropdown: button shows selected items, animated accent bars
-    - Safer module loader
+    - Safer loader and function refactor
     - General cleanup and stability improvements
-    - Flags: Vynixus.Flags (Get/Set/OnChange/Export/Import)
+    - Flags API: Vynixus.Flags (Get/Set/OnChange/Export/Import)
     - Elements wired to flags
     - Added Vynixus.Destroy and used in Close button
     - Disconnected stored signals on cleanup
@@ -3377,14 +3377,20 @@ end
 
 Vynixus.CreateWindow = CreateWindow
 Vynixus.Notifications = MODULES.Notifications()
-Vynixus.Notifications.SendNotification = function(message, titleText)
-	Vynixus.Notifications.SendNotification(message, titleText)
+local OriginalSendNotification = Vynixus.Notifications.SendNotification
+local OriginalClearNotifications = Vynixus.Notifications.ClearNotifications
+local OriginalGetNotificationSettings = Vynixus.Notifications.GetNotificationSettings
+
+Vynixus.SendNotification = function(message, titleText)
+	OriginalSendNotification(message, titleText)
 end
-Vynixus.Notifications.ClearNotifications = function()
-	Vynixus.Notifications.ClearNotifications()
+
+Vynixus.ClearNotifications = function()
+	OriginalClearNotifications()
 end
-Vynixus.Notifications.GetNotificationSettings = function()
-	Vynixus.Notifications.GetNotificationSettings()
+
+Vynixus.GetNotificationSettings = function()
+	return OriginalGetNotificationSettings()
 end
 
 return Vynixus

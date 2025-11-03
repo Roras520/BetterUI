@@ -1,7 +1,7 @@
 --[[
     Vynixus UI Library (Renamed from BetterUI)
     Created by Stacm/Stack
-    Build 1.4.0
+    Build 1.4.1
     Date: 2025-11-03
     Changelogs:
     - Unified object creation/signals via Creator helpers (gpt idea)
@@ -19,6 +19,8 @@
     - Elements wired to flags
     - Added Vynixus.Destroy and used in Close button
     - Disconnected stored signals on cleanup
+	- Fixed stack overflow error
+	- Removed the high background transparency on dropdown popups when using acrylic
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -1234,16 +1236,16 @@ local function CreateWindow(Config)
 			end
 		end
 
-		local Popup = Creator.New("Frame", {
-			Parent = MainFrame,
-			BackgroundColor3 = ThemeNow.SectionBG,
-			BackgroundTransparency = Window.Acrylic and 0.24 or 0.02,
-			BorderSizePixel = 0,
-			ClipsDescendants = true,
-			Position = UDim2.fromOffset(RelPos.X, RelPos.Y),
-			Size = UDim2.fromOffset(AnchorSize.X, 0),
-			ZIndex = 60,
-		})
+	local Popup = Creator.New("Frame", {
+		Parent = MainFrame,
+		BackgroundColor3 = ThemeNow.SectionBG,
+		BackgroundTransparency = 0.02,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Position = UDim2.fromOffset(RelPos.X, RelPos.Y),
+		Size = UDim2.fromOffset(AnchorSize.X, 0),
+		ZIndex = 60,
+	})
 
 		registerThemeObject(Popup, "BackgroundColor3", "SectionBG")
 		createCorner(Popup, 7)
@@ -1273,7 +1275,7 @@ local function CreateWindow(Config)
 			local Item = Creator.New("TextButton", {
 				Parent = List,
 				BackgroundColor3 = IsSelected and ThemeNow.ElementColor or ThemeNow.SectionBorder,
-				BackgroundTransparency = 0.7,
+				BackgroundTransparency = 0.655,
 				BorderSizePixel = 0,
 				ClipsDescendants = true,
 				Size = UDim2.new(1.00848591, -4, 0, 28),
@@ -2299,26 +2301,26 @@ end)
 				DescLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-			local DropdownButton = Creator.New("TextButton", {
-				Parent = DropdownFrame,
-				AnchorPoint = Vector2.new(1, 0.5),
-				BackgroundColor3 = CurrentThemeData.ElementColor,
-				BackgroundTransparency = CurrentThemeData.DropdownButtonTransparency or 0.7,
-				BorderSizePixel = 0,
-				ClipsDescendants = true,
-				Position = UDim2.new(1, -10, 0.5, 0),
-				Size = UDim2.new(0, 163, 0, 33),
-				AutoButtonColor = false,
-				Font = Enum.Font.Cartoon,
-				Text = "<",
-				TextColor3 = CurrentThemeData.TextColor,
-				TextSize = 19,
-				TextTransparency = 1,
-			}, {
-				Creator.New("UICorner", {
-					CornerRadius = UDim.new(0, 4),
-				}),
-			})
+		local DropdownButton = Creator.New("TextButton", {
+			Parent = DropdownFrame,
+			AnchorPoint = Vector2.new(1, 0.5),
+			BackgroundColor3 = CurrentThemeData.ElementColor,
+			BackgroundTransparency = Window.Acrylic and 0.3 or (CurrentThemeData.DropdownButtonTransparency or 0.7),
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Position = UDim2.new(1, -10, 0.5, 0),
+			Size = UDim2.new(0, 163, 0, 33),
+			AutoButtonColor = false,
+			Font = Enum.Font.Cartoon,
+			Text = "<",
+			TextColor3 = CurrentThemeData.TextColor,
+			TextSize = 19,
+			TextTransparency = 1,
+		}, {
+			Creator.New("UICorner", {
+				CornerRadius = UDim.new(0, 4),
+			}),
+		})
 
 			pcall(function()
 				attachRipple(DropdownButton)
@@ -2470,26 +2472,26 @@ end)
 				DescLabel.AutomaticSize = Enum.AutomaticSize.Y
 			end
 
-			local MultiDropdownButton = Creator.New("TextButton", {
-				Parent = MultiDropdownFrame,
-				AnchorPoint = Vector2.new(1, 0.5),
-				BackgroundColor3 = CurrentThemeData.ElementColor,
-				BackgroundTransparency = 0.7,
-				BorderSizePixel = 0,
-				ClipsDescendants = true,
-				Position = UDim2.new(1, -10, 0.5, 0),
-				Size = UDim2.new(0, 163, 0, 33),
-				AutoButtonColor = false,
-				Font = Enum.Font.Cartoon,
-				Text = "<",
-				TextColor3 = CurrentThemeData.TextColor,
-				TextSize = 19,
-				TextTransparency = 1,
-			}, {
-				Creator.New("UICorner", {
-					CornerRadius = UDim.new(0, 4),
-				}),
-			})
+		local MultiDropdownButton = Creator.New("TextButton", {
+			Parent = MultiDropdownFrame,
+			AnchorPoint = Vector2.new(1, 0.5),
+			BackgroundColor3 = CurrentThemeData.ElementColor,
+			BackgroundTransparency = Window.Acrylic and 0.3 or 0.7,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Position = UDim2.new(1, -10, 0.5, 0),
+			Size = UDim2.new(0, 163, 0, 33),
+			AutoButtonColor = false,
+			Font = Enum.Font.Cartoon,
+			Text = "<",
+			TextColor3 = CurrentThemeData.TextColor,
+			TextSize = 19,
+			TextTransparency = 1,
+		}, {
+			Creator.New("UICorner", {
+				CornerRadius = UDim.new(0, 4),
+			}),
+		})
 
 			pcall(function()
 				attachRipple(MultiDropdownButton)

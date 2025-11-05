@@ -1,11 +1,10 @@
 --[[
-    Sylix UI Library (Renamed from Vynixus)
+    Sylix UI Library
     Created by Stacm/Stack
-    Build 1.5.0
+    Build 1.5.1
     Date: 2025-11-05
     Changelogs:
-	- Changed a lot of things idk, do you really think i bother with writing every change i do? its fucking 7am give me a break.
-	- lot more customization ig
+	- Maybe fixed paragraph wrapping issue??
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -3341,16 +3340,17 @@ local function CreateWindow(Config)
 
 			local ParagraphContent = createStyledEl("TextLabel", ParagraphFrame, {
 				text = Content,
-				size = UDim2.new(1, -20, 0, 30),
-				position = UDim2.fromOffset(10, 25),
+				size = UDim2.new(1, -20, 0, 14),
+				position = UDim2.fromOffset(10, 23),
 				font = Enum.Font.Gotham,
 				textSize = 12,
 				textColor = Color3.fromRGB(180, 180, 180),
 				textXAlignment = Enum.TextXAlignment.Left,
-				textYAlignment = Enum.TextYAlignment.Top,
-				textWrapped = true,
-				automaticSize = Enum.AutomaticSize.Y
+				textYAlignment = Enum.TextYAlignment.Top
 			})
+			
+			ParagraphContent.TextWrapped = true
+			ParagraphContent.AutomaticSize = Enum.AutomaticSize.Y
 
 			return ParagraphFrame
 		end

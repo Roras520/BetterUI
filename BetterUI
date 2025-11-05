@@ -1,5 +1,5 @@
 --[[
-    Vynixus UI Library (Renamed from BetterUI)
+    Sylix UI Library (Renamed from Sylix)
     Created by Stacm/Stack
     Build 1.4.3
     Date: 2025-11-03
@@ -15,9 +15,9 @@
     - Multi-dropdown: button shows selected items, animated accent bars
     - Safer loader and function refactor
     - General cleanup and stability improvements
-    - Flags API: Vynixus.Flags (Get/Set/OnChange/Export/Import)
+    - Flags API: Sylix.Flags (Get/Set/OnChange/Export/Import)
     - Elements wired to flags
-    - Added Vynixus.Destroy and used in Close button
+    - Added Sylix.Destroy and used in Close button
     - Disconnected stored signals on cleanup
 	- Fixed stack overflow error
 	- Removed the high background transparency on dropdown popups when using acrylic
@@ -36,29 +36,29 @@ local TextService = game:GetService("TextService")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui") or LocalPlayer.PlayerGui
 
-local VYNIXUS_LOADED = _G.VYNIXUS_LOADED
+local SYLIX_LOADED = _G.SYLIX_LOADED
 
-if VYNIXUS_LOADED then
+if SYLIX_LOADED then
 	for _, gui in pairs(CoreGui:GetChildren()) do
-		if gui.Name == "VynixusUI" or gui.Name == "VynixusUILoading" or gui.Name == "Notifications" then
+		if gui.Name == "SylixUI" or gui.Name == "SylixUILoading" or gui.Name == "Notifications" then
 			gui:Destroy()
 		end
 	end
-	if _G.Vynixus and _G.Vynixus.ScreenGui and _G.Vynixus.ScreenGui.Parent then
-		_G.Vynixus.ScreenGui:Destroy()
+	if _G.Sylix and _G.Sylix.ScreenGui and _G.Sylix.ScreenGui.Parent then
+		_G.Sylix.ScreenGui:Destroy()
 	end
-	_G.Vynixus = nil
-	_G.VYNIXUS_LOADED = false
+	_G.Sylix = nil
+	_G.SYLIX_LOADED = false
 end
 
 if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
 
-_G.VYNIXUS_LOADED = true
+_G.SYLIX_LOADED = true
 
-local Vynixus = {}
-_G.Vynixus = Vynixus
+local Sylix = {}
+_G.Sylix = Sylix
 
 local moduleCache = {}
 
@@ -87,7 +87,7 @@ local function SafeLoad(sources)
 	return nil
 end
 
-Vynixus.SafeLoad = SafeLoad
+Sylix.SafeLoad = SafeLoad
 
 -- Zero need for a safe load, all I needed to do is just paste the original module code into here but I guess I just wanted to code something for fun.
 local MODULES = {
@@ -95,7 +95,8 @@ local MODULES = {
 		local module = SafeLoad({
 			"https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur",
 			function()
-				local v0=game:GetService("Lighting");local v1=workspace.CurrentCamera;local v2=Vector2.new(10,10);local v3=0.01;local v4=1 -1e-7 ;local v5=0.25;local v6=Instance.new("DepthOfFieldEffect");v6.FarIntensity=0;v6.NearIntensity=v5;v6.FocusDistance=0.25;v6.InFocusRadius=0;v6.Parent=v0;local v12={};local v13={};local v14={};local v15={};v15.__index=v15;function rayPlaneIntersect(v21,v22,v23,v24) local v25=v22;local v26=v24;local v27=v23-v21 ;local v28=(v25.x * v27.x) + (v25.y * v27.y) + (v25.z * v27.z) ;local v29=(v25.x * v26.x) + (v25.y * v26.y) + (v25.z * v26.z) ;local v30= -v28/v29 ;return v23 + (v30 * v24) ,v30;end function rebuildPartsList() v12={};v13={};for v74,v75 in pairs(v14) do table.insert(v12,v75);table.insert(v13,v74);end end v15.new=function(v31,v32) local v33=Instance.new("Part");v33.Size=Vector3.new(1,1,1) * 0.01 ;v33.Anchored=true;v33.CanCollide=false;v33.CanTouch=false;v33.Material=Enum.Material.Glass;v33.Transparency=v4;v33.Parent=workspace.CurrentCamera;local v43;if (v32=="Rectangle") then v43=Instance.new("BlockMesh");v43.Parent=v33;elseif (v32=="Oval") then v43=Instance.new("SpecialMesh");v43.MeshType=Enum.MeshType.Sphere;v43.Parent=v33;end local v44=false;local v45=v31;while true do v45=v45.Parent;if (v45 and v45:IsA("ScreenGui")) then v44=v45.IgnoreGuiInset;break;elseif (v45==nil) then break;end end local v46=setmetatable({Frame=v31,Part=v33,Mesh=v43,IgnoreGuiInset=v44},v15);v14[v46]=v33;rebuildPartsList();game:GetService("RunService"):BindToRenderStep("AcrylicBlur_"   .. tostring(v46) ,Enum.RenderPriority.Camera.Value + 1 ,function() v33.CFrame=v1.CFrame * CFrame.new(0,0,0) ;v15.updateAll();end);return v46;end;function updateGui(v48) if  not v48.Frame.Visible then v48.Part.Transparency=1;return;end local v49=workspace.CurrentCamera;local v50=v48.Frame;local v51=v48.Part;local v52=v48.Mesh;v51.Transparency=v4;local v54=v50.AbsolutePosition;local v55=v50.AbsoluteSize;local v56=v54 + v2 ;local v57=(v56 + v55) -(v2 * 2) ;v56=Vector2.new(math.max(v56.X,v54.X),math.max(v56.Y,v54.Y));v57=Vector2.new(math.min(v57.X,v54.X + v55.X ),math.min(v57.Y,v54.Y + v55.Y ));local v58,v59;if v48.IgnoreGuiInset then v58=v49:ViewportPointToRay(v56.X,v56.Y,1);v59=v49:ViewportPointToRay(v57.X,v57.Y,1);else v58=v49:ScreenPointToRay(v56.X,v56.Y,1);v59=v49:ScreenPointToRay(v57.X,v57.Y,1);end local v60=v49.CFrame.Position + (v49.CFrame.LookVector * (0.05 -v49.NearPlaneZ)) ;local v61=v49.CFrame.LookVector;local v62=rayPlaneIntersect(v60,v61,v58.Origin,v58.Direction);local v63=rayPlaneIntersect(v60,v61,v59.Origin,v59.Direction);local v62=v49.CFrame:PointToObjectSpace(v62);local v63=v49.CFrame:PointToObjectSpace(v63);local v64=v63-v62 ;local v65=(v62 + v63)/2 ;v52.Offset=v65;v52.Scale=v64/v3 ;end v15.updateAll=function() for v78=1, #v13 do updateGui(v13[v78]);end if ( #v12>0) then local v81={};for v84=1, #v12 do v81[v84]=workspace.CurrentCamera.CFrame;end local v82={};for v87=1, #v12 do if ((typeof(v12[v87])=="Instance") and v12[v87]:IsA("BasePart")) then table.insert(v82,v12[v87]);end end workspace:BulkMoveTo(v82,v81,Enum.BulkMoveMode.FireCFrameChanged);end v6.FocusDistance=0.25 -v1.NearPlaneZ ;end;v15.Destroy=function(v69) game:GetService("RunService"):UnbindFromRenderStep("AcrylicBlur_"   .. tostring(v69) );v69.Part:Destroy();v14[v69]=nil;rebuildPartsList();end;v15.SetIntensity=function(v71,v72) v6.NearIntensity=v72;end;return v15;
+				--local v0=game:GetService("Lighting");local v1=workspace.CurrentCamera;local v2=Vector2.new(10,10);local v3=0.01;local v4=1 -1e-7 ;local v5=0.25;local v6=Instance.new("DepthOfFieldEffect");v6.FarIntensity=0;v6.NearIntensity=v5;v6.FocusDistance=0.25;v6.InFocusRadius=0;v6.Parent=v0;local v12={};local v13={};local v14={};local v15={};v15.__index=v15;function rayPlaneIntersect(v21,v22,v23,v24) local v25=v22;local v26=v24;local v27=v23-v21 ;local v28=(v25.x * v27.x) + (v25.y * v27.y) + (v25.z * v27.z) ;local v29=(v25.x * v26.x) + (v25.y * v26.y) + (v25.z * v26.z) ;local v30= -v28/v29 ;return v23 + (v30 * v24) ,v30;end function rebuildPartsList() v12={};v13={};for v74,v75 in pairs(v14) do table.insert(v12,v75);table.insert(v13,v74);end end v15.new=function(v31,v32) local v33=Instance.new("Part");v33.Size=Vector3.new(1,1,1) * 0.01 ;v33.Anchored=true;v33.CanCollide=false;v33.CanTouch=false;v33.Material=Enum.Material.Glass;v33.Transparency=v4;v33.Parent=workspace.CurrentCamera;local v43;if (v32=="Rectangle") then v43=Instance.new("BlockMesh");v43.Parent=v33;elseif (v32=="Oval") then v43=Instance.new("SpecialMesh");v43.MeshType=Enum.MeshType.Sphere;v43.Parent=v33;end local v44=false;local v45=v31;while true do v45=v45.Parent;if (v45 and v45:IsA("ScreenGui")) then v44=v45.IgnoreGuiInset;break;elseif (v45==nil) then break;end end local v46=setmetatable({Frame=v31,Part=v33,Mesh=v43,IgnoreGuiInset=v44},v15);v14[v46]=v33;rebuildPartsList();game:GetService("RunService"):BindToRenderStep("AcrylicBlur_"   .. tostring(v46) ,Enum.RenderPriority.Camera.Value + 1 ,function() v33.CFrame=v1.CFrame * CFrame.new(0,0,0) ;v15.updateAll();end);return v46;end;function updateGui(v48) if  not v48.Frame.Visible then v48.Part.Transparency=1;return;end local v49=workspace.CurrentCamera;local v50=v48.Frame;local v51=v48.Part;local v52=v48.Mesh;v51.Transparency=v4;local v54=v50.AbsolutePosition;local v55=v50.AbsoluteSize;local v56=v54 + v2 ;local v57=(v56 + v55) -(v2 * 2) ;v56=Vector2.new(math.max(v56.X,v54.X),math.max(v56.Y,v54.Y));v57=Vector2.new(math.min(v57.X,v54.X + v55.X ),math.min(v57.Y,v54.Y + v55.Y ));local v58,v59;if v48.IgnoreGuiInset then v58=v49:ViewportPointToRay(v56.X,v56.Y,1);v59=v49:ViewportPointToRay(v57.X,v57.Y,1);else v58=v49:ScreenPointToRay(v56.X,v56.Y,1);v59=v49:ScreenPointToRay(v57.X,v57.Y,1);end local v60=v49.CFrame.Position + (v49.CFrame.LookVector * (0.05 -v49.NearPlaneZ)) ;local v61=v49.CFrame.LookVector;local v62=rayPlaneIntersect(v60,v61,v58.Origin,v58.Direction);local v63=rayPlaneIntersect(v60,v61,v59.Origin,v59.Direction);local v62=v49.CFrame:PointToObjectSpace(v62);local v63=v49.CFrame:PointToObjectSpace(v63);local v64=v63-v62 ;local v65=(v62 + v63)/2 ;v52.Offset=v65;v52.Scale=v64/v3 ;end v15.updateAll=function() for v78=1, #v13 do updateGui(v13[v78]);end if ( #v12>0) then local v81={};for v84=1, #v12 do v81[v84]=workspace.CurrentCamera.CFrame;end local v82={};for v87=1, #v12 do if ((typeof(v12[v87])=="Instance") and v12[v87]:IsA("BasePart")) then table.insert(v82,v12[v87]);end end workspace:BulkMoveTo(v82,v81,Enum.BulkMoveMode.FireCFrameChanged);end v6.FocusDistance=0.25 -v1.NearPlaneZ ;end;v15.Destroy=function(v69) game:GetService("RunService"):UnbindFromRenderStep("AcrylicBlur_"   .. tostring(v69) );v69.Part:Destroy();v14[v69]=nil;rebuildPartsList();end;v15.SetIntensity=function(v71,v72) v6.NearIntensity=v72;end;return v15;
+				return readfile("SylixUILibrary/AcrylicModule")
 			end,
 		})
 		return module
@@ -104,7 +105,8 @@ local MODULES = {
 		local module = SafeLoad({
 			"https://raw.githubusercontent.com/Roras520/Lib/refs/heads/main/Notifications",
 			function()
-				local v0={};local v1=false;local v2=_G.Stack_NotificationsLibrary~=nil ;local v3=0.3;local v4=6;local v5=1;local v6=20;local function v7() local v8=game:GetService("Players");local v9=game:GetService("TweenService");local v10=game:GetService("VRService");local v11=game:GetService("RunService");local v12={};v12.createCorner=function(v35,v36) if  not v35 then return nil;end local v37=Instance.new("UICorner");v37.CornerRadius=UDim.new(0,v36 or 8 );v37.Parent=v35;return v37;end;v12.tween=function(v40,v41,v42,v43,v44) if ( not v40 or  not v41) then return nil;end v42=v42 or 0.2 ;v43=v43 or Enum.EasingStyle.Quad ;v44=v44 or Enum.EasingDirection.Out ;return v9:Create(v40,TweenInfo.new(v42,v43,v44),v41);end;local v15=v8.LocalPlayer;local v16=(v11:IsStudio() and v15.PlayerGui) or game:GetService("CoreGui") ;local v17,v18=pcall(function() return v15.Character or v15.CharacterAdded:Wait() ;end);if  not v17 then warn("Failed to get character:",v18);return nil;end local v19=v18:FindFirstChild("Head");local v20={MaxNotifications=5,Cooldown=0.6,MessageLifetime=4,SizePC=UDim2.new(0,250,0,60),SizeVR=Vector3.new(2,1,0.1),TextColor=Color3.fromRGB(255,255,255),Font=Enum.Font.Code,TextSizePC=28,TextSizeVR=30.47,SpacingPC=8,SpacingVR=0.75,VROffset=Vector3.new(0,1.06,3),Enabled=true};local v21={Queue={},LastSendTime=0,ActiveCount=0};local v22,v23,v24,v25,v26;local v27=false;local v28="";local v29=false;local function v30() local v45=tick();local v46=v20.MessageLifetime;local v47=v20.MaxNotifications;for v109= #v21.Queue,1, -1 do if (v21.Queue[v109] and ((v45-v21.Queue[v109].time)>v46)) then table.remove(v21.Queue,v109);v21.ActiveCount-=1 end end while  #v21.Queue>v47  do table.remove(v21.Queue,1);v21.ActiveCount-=1 end local v48={};for v110,v111 in ipairs(v21.Queue) do table.insert(v48,v111.text);end if v26 then v26.Text=table.concat(v48,"\n");v26.Visible=v20.Enabled and ( #v21.Queue>0) ;end end local function v31(v49,v50) if  not v20.Enabled then return;end if (v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end if (v21.ActiveCount>=v20.MaxNotifications) then return;end local v51=Instance.new("Frame");v51.Name="Notif";v51.Parent=v23;v51.BackgroundColor3=Color3.new(0.0784314,0.0784314,0.0980392);v51.BackgroundTransparency=0.25;v51.BorderColor3=Color3.new(0,0,0);v51.BorderSizePixel=0;v51.Position=UDim2.new(0.698148131,0,0.91481483,0);v51.Size=UDim2.new(0,298,0,51);v12.createCorner(v51,v4);local v60=Instance.new("TextLabel");v60.Name="Title";v60.Parent=v51;v60.BackgroundTransparency=1;v60.BorderSizePixel=0;v60.Position=UDim2.new(0.0449179821,0,0.156111494,0);v60.Size=UDim2.new(0,310,0,17);v60.Font=Enum.Font.SourceSansSemibold;v60.Text=v50 or "Title" ;v60.TextColor3=Color3.new(1,1,1);v60.TextSize=16;v60.TextXAlignment=Enum.TextXAlignment.Left;local v74=Instance.new("TextLabel");v74.Name="Description";v74.Parent=v51;v74.BackgroundTransparency=1;v74.BorderSizePixel=0;v74.Position=UDim2.new(0.0432063378,0,0.502512991,0);v74.Size=UDim2.new(0,301,0,17);v74.Font=Enum.Font.SourceSans;v74.Text=v49 or "" ;v74.TextColor3=Color3.new(1,1,1);v74.TextSize=14;v74.TextXAlignment=Enum.TextXAlignment.Left;v21.LastSendTime=tick();v21.ActiveCount+=1 task.delay(v20.MessageLifetime,function() if v51.Parent then v12.tween(v51,{Position=UDim2.new(v5,v6,0,0),BackgroundTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v60,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v74,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();task.wait(v3);v51:Destroy();v21.ActiveCount-=1 end end);end local function v32(v88,v89) if (v10.VREnabled and  not v27) then if  not v29 then v29=true;v31(v28 or "VR setup failed" ,"Notification Launch Error");end v31(v88,v89);return;end if  not (v20.Enabled and v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end v21.LastSendTime=tick();v21.ActiveCount+=1 table.insert(v21.Queue,{text=v88,time=tick()});if  not v1 then v1=true;v11:BindToRenderStep("UpdateVRNotifications",1,v30);end v30();end if (v10.VREnabled and v19) then local v112,v113=pcall(function() v24=Instance.new("Part");v24.Anchored=false;v24.CanCollide=false;v24.CanQuery=false;v24.CanTouch=false;v24.Massless=true;v24.Transparency=1;v24.Size=v20.SizeVR;v24.Parent=workspace;v25=Instance.new("SurfaceGui");v25.Face=Enum.NormalId.Back;v25.Adornee=v24;v25.AlwaysOnTop=true;v25.Parent=v24;v26=Instance.new("TextLabel");v26.BackgroundTransparency=1;v26.TextColor3=v20.TextColor;v26.Font=v20.Font;v26.TextSize=v20.TextSizeVR;v26.Size=UDim2.new(1,0,1,0);v26.TextYAlignment=Enum.TextYAlignment.Top;v26.Visible=false;v26.Parent=v25;v24.CFrame=v19.CFrame * CFrame.new(v20.VROffset) ;local v145=Instance.new("Weld");v145.Name="NotifWeld";v145.Part0=v19;v145.Part1=v24;v145.C1=CFrame.new(0,v20.SpacingVR,1);v145.Parent=v24;v24.CFrame=CFrame.new(v24.Position,v19.Position);v27=true;end);if  not v112 then warn("VR Notification Setup Failed:",tostring(v113));v28=tostring(v113);v27=false;end elseif (v10.VREnabled and  not v19) then v28="LocalHead not found";warn("VR Notification Setup Failed:",v28);v27=false;end local v33,v34=pcall(function() v22=Instance.new("ScreenGui");v22.IgnoreGuiInset=true;v22.Parent=v16;v23=Instance.new("Frame");v23.BackgroundTransparency=1;v23.Size=UDim2.new(0,320,0,300 + (70 * v20.MaxNotifications) );v23.AnchorPoint=Vector2.new(1,1);v23.Position=UDim2.new(0.98,0,0.98,0);v23.Parent=v22;local v98=Instance.new("UIListLayout");v98.Padding=UDim.new(0,v20.SpacingPC);v98.SortOrder=Enum.SortOrder.LayoutOrder;v98.VerticalAlignment=Enum.VerticalAlignment.Bottom;v98.HorizontalAlignment=Enum.HorizontalAlignment.Right;v98.Parent=v23;end);if  not v33 then warn("PC Notification Setup Failed:",tostring(v34));end return {SendNotification=function(v107,v108) if v10.VREnabled then v32(v107,v108);else v31(v107,v108);end end,ClearNotifications=function() for v114,v115 in ipairs(v23:GetChildren()) do if v115:IsA("Frame") then v115:Destroy();end end end,GetNotificationSettings=function() return v20;end};end if  not v2 then _G.Stack_NotificationsLibrary=v7();end v0=_G.Stack_NotificationsLibrary;return v0;
+				--local v0={};local v1=false;local v2=_G.Stack_NotificationsLibrary~=nil ;local v3=0.3;local v4=6;local v5=1;local v6=20;local function v7() local v8=game:GetService("Players");local v9=game:GetService("TweenService");local v10=game:GetService("VRService");local v11=game:GetService("RunService");local v12={};v12.createCorner=function(v35,v36) if  not v35 then return nil;end local v37=Instance.new("UICorner");v37.CornerRadius=UDim.new(0,v36 or 8 );v37.Parent=v35;return v37;end;v12.tween=function(v40,v41,v42,v43,v44) if ( not v40 or  not v41) then return nil;end v42=v42 or 0.2 ;v43=v43 or Enum.EasingStyle.Quad ;v44=v44 or Enum.EasingDirection.Out ;return v9:Create(v40,TweenInfo.new(v42,v43,v44),v41);end;local v15=v8.LocalPlayer;local v16=(v11:IsStudio() and v15.PlayerGui) or game:GetService("CoreGui") ;local v17,v18=pcall(function() return v15.Character or v15.CharacterAdded:Wait() ;end);if  not v17 then warn("Failed to get character:",v18);return nil;end local v19=v18:FindFirstChild("Head");local v20={MaxNotifications=5,Cooldown=0.6,MessageLifetime=4,SizePC=UDim2.new(0,250,0,60),SizeVR=Vector3.new(2,1,0.1),TextColor=Color3.fromRGB(255,255,255),Font=Enum.Font.Code,TextSizePC=28,TextSizeVR=30.47,SpacingPC=8,SpacingVR=0.75,VROffset=Vector3.new(0,1.06,3),Enabled=true};local v21={Queue={},LastSendTime=0,ActiveCount=0};local v22,v23,v24,v25,v26;local v27=false;local v28="";local v29=false;local function v30() local v45=tick();local v46=v20.MessageLifetime;local v47=v20.MaxNotifications;for v109= #v21.Queue,1, -1 do if (v21.Queue[v109] and ((v45-v21.Queue[v109].time)>v46)) then table.remove(v21.Queue,v109);v21.ActiveCount-=1 end end while  #v21.Queue>v47  do table.remove(v21.Queue,1);v21.ActiveCount-=1 end local v48={};for v110,v111 in ipairs(v21.Queue) do table.insert(v48,v111.text);end if v26 then v26.Text=table.concat(v48,"\n");v26.Visible=v20.Enabled and ( #v21.Queue>0) ;end end local function v31(v49,v50) if  not v20.Enabled then return;end if (v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end if (v21.ActiveCount>=v20.MaxNotifications) then return;end local v51=Instance.new("Frame");v51.Name="Notif";v51.Parent=v23;v51.BackgroundColor3=Color3.new(0.0784314,0.0784314,0.0980392);v51.BackgroundTransparency=0.25;v51.BorderColor3=Color3.new(0,0,0);v51.BorderSizePixel=0;v51.Position=UDim2.new(0.698148131,0,0.91481483,0);v51.Size=UDim2.new(0,298,0,51);v12.createCorner(v51,v4);local v60=Instance.new("TextLabel");v60.Name="Title";v60.Parent=v51;v60.BackgroundTransparency=1;v60.BorderSizePixel=0;v60.Position=UDim2.new(0.0449179821,0,0.156111494,0);v60.Size=UDim2.new(0,310,0,17);v60.Font=Enum.Font.SourceSansSemibold;v60.Text=v50 or "Title" ;v60.TextColor3=Color3.new(1,1,1);v60.TextSize=16;v60.TextXAlignment=Enum.TextXAlignment.Left;local v74=Instance.new("TextLabel");v74.Name="Description";v74.Parent=v51;v74.BackgroundTransparency=1;v74.BorderSizePixel=0;v74.Position=UDim2.new(0.0432063378,0,0.502512991,0);v74.Size=UDim2.new(0,301,0,17);v74.Font=Enum.Font.SourceSans;v74.Text=v49 or "" ;v74.TextColor3=Color3.new(1,1,1);v74.TextSize=14;v74.TextXAlignment=Enum.TextXAlignment.Left;v21.LastSendTime=tick();v21.ActiveCount+=1 task.delay(v20.MessageLifetime,function() if v51.Parent then v12.tween(v51,{Position=UDim2.new(v5,v6,0,0),BackgroundTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v60,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v74,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();task.wait(v3);v51:Destroy();v21.ActiveCount-=1 end end);end local function v32(v88,v89) if (v10.VREnabled and  not v27) then if  not v29 then v29=true;v31(v28 or "VR setup failed" ,"Notification Launch Error");end v31(v88,v89);return;end if  not (v20.Enabled and v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end v21.LastSendTime=tick();v21.ActiveCount+=1 table.insert(v21.Queue,{text=v88,time=tick()});if  not v1 then v1=true;v11:BindToRenderStep("UpdateVRNotifications",1,v30);end v30();end if (v10.VREnabled and v19) then local v112,v113=pcall(function() v24=Instance.new("Part");v24.Anchored=false;v24.CanCollide=false;v24.CanQuery=false;v24.CanTouch=false;v24.Massless=true;v24.Transparency=1;v24.Size=v20.SizeVR;v24.Parent=workspace;v25=Instance.new("SurfaceGui");v25.Face=Enum.NormalId.Back;v25.Adornee=v24;v25.AlwaysOnTop=true;v25.Parent=v24;v26=Instance.new("TextLabel");v26.BackgroundTransparency=1;v26.TextColor3=v20.TextColor;v26.Font=v20.Font;v26.TextSize=v20.TextSizeVR;v26.Size=UDim2.new(1,0,1,0);v26.TextYAlignment=Enum.TextYAlignment.Top;v26.Visible=false;v26.Parent=v25;v24.CFrame=v19.CFrame * CFrame.new(v20.VROffset) ;local v145=Instance.new("Weld");v145.Name="NotifWeld";v145.Part0=v19;v145.Part1=v24;v145.C1=CFrame.new(0,v20.SpacingVR,1);v145.Parent=v24;v24.CFrame=CFrame.new(v24.Position,v19.Position);v27=true;end);if  not v112 then warn("VR Notification Setup Failed:",tostring(v113));v28=tostring(v113);v27=false;end elseif (v10.VREnabled and  not v19) then v28="LocalHead not found";warn("VR Notification Setup Failed:",v28);v27=false;end local v33,v34=pcall(function() v22=Instance.new("ScreenGui");v22.IgnoreGuiInset=true;v22.Parent=v16;v23=Instance.new("Frame");v23.BackgroundTransparency=1;v23.Size=UDim2.new(0,320,0,300 + (70 * v20.MaxNotifications) );v23.AnchorPoint=Vector2.new(1,1);v23.Position=UDim2.new(0.98,0,0.98,0);v23.Parent=v22;local v98=Instance.new("UIListLayout");v98.Padding=UDim.new(0,v20.SpacingPC);v98.SortOrder=Enum.SortOrder.LayoutOrder;v98.VerticalAlignment=Enum.VerticalAlignment.Bottom;v98.HorizontalAlignment=Enum.HorizontalAlignment.Right;v98.Parent=v23;end);if  not v33 then warn("PC Notification Setup Failed:",tostring(v34));end return {SendNotification=function(v107,v108) if v10.VREnabled then v32(v107,v108);else v31(v107,v108);end end,ClearNotifications=function() for v114,v115 in ipairs(v23:GetChildren()) do if v115:IsA("Frame") then v115:Destroy();end end end,GetNotificationSettings=function() return v20;end};end if  not v2 then _G.Stack_NotificationsLibrary=v7();end v0=_G.Stack_NotificationsLibrary;return v0;
+				return readfile("SylixUILibrary/NotificationModule")
 			end,
 		})
 		return module
@@ -930,7 +932,7 @@ local function cleanupExistingUI()
 	end
 
 	for _, Gui in pairs(CoreGui:GetChildren()) do
-		if Gui.Name == "VynixusUI" or Gui.Name == "VynixusUILoading" then
+		if Gui.Name == "SylixUI" or Gui.Name == "SylixUILoading" then
 			Gui:Destroy()
 		end
 	end
@@ -968,7 +970,7 @@ end
 local BlurredGui = nil
 local acrylicEnabled = false
 
-Vynixus.SetTheme = SetTheme
+Sylix.SetTheme = SetTheme
 
 local function loadFromMarketplace(AssetId)
 	local Success, ModuleCode = pcall(function()
@@ -1026,8 +1028,8 @@ local function SetAcrylic(Enabled)
 	end
 end
 
-Vynixus.SetAcrylic = SetAcrylic
-Vynixus.mergeTheme = mergeTheme
+Sylix.SetAcrylic = SetAcrylic
+Sylix.mergeTheme = mergeTheme
 
 local function notifyFlagChanged(name, value)
 	local subs = flagSubscribers[name]
@@ -1081,9 +1083,9 @@ function FlagsAPI.Import(tbl)
 	end
 end
 
-Vynixus.Flags = FlagsAPI
+Sylix.Flags = FlagsAPI
 local Window = nil
-Vynixus.Destroy = function()
+Sylix.Destroy = function()
 	cleanupExistingUI()
 	if Window then
 		Window.OnClose()
@@ -1128,7 +1130,7 @@ local function CreateWindow(Config)
 
 	local ScreenGui = Creator.New("ScreenGui", {
 		Parent = CoreGui,
-		Name = "VynixusUI",
+		Name = "SylixUI",
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 		ResetOnSpawn = false,
 	})
@@ -1406,7 +1408,7 @@ local function CreateWindow(Config)
 	})
 
 	local TitleLabel = createStyledEl("TextLabel", TitleHolder, {
-		text = Config.Title or "VynixusUI",
+		text = Config.Title or "SylixUI",
 		size = UDim2.new(1, -100, 1, 0),
 		font = Enum.Font.Gotham,
 		textSize = 15,
@@ -1546,8 +1548,8 @@ local function CreateWindow(Config)
 	end)
 
 	CloseButton.MouseButton1Click:Connect(function()
-		if Vynixus.Destroy then
-			Vynixus.Destroy()
+		if Sylix.Destroy then
+			Sylix.Destroy()
 		else
 			if ScreenGui and ScreenGui.Parent then
 				ScreenGui:Destroy()
@@ -3413,32 +3415,32 @@ local function CreateWindow(Config)
 	return Window
 end
 
-Vynixus.CreateWindow = CreateWindow
+Sylix.CreateWindow = CreateWindow
 
 local NotificationsModule = MODULES.Notifications()
 if NotificationsModule and type(NotificationsModule) == "table" then
-	Vynixus.Notifications = NotificationsModule
-	Vynixus.SendNotification = function(message, titleText)
-		if Vynixus.Notifications and Vynixus.Notifications.SendNotification then
-			Vynixus.Notifications.SendNotification(message, titleText)
+	Sylix.Notifications = NotificationsModule
+	Sylix.SendNotification = function(message, titleText)
+		if Sylix.Notifications and Sylix.Notifications.SendNotification then
+			Sylix.Notifications.SendNotification(message, titleText)
 		end
 	end
-	Vynixus.ClearNotifications = function()
-		if Vynixus.Notifications and Vynixus.Notifications.ClearNotifications then
-			Vynixus.Notifications.ClearNotifications()
+	Sylix.ClearNotifications = function()
+		if Sylix.Notifications and Sylix.Notifications.ClearNotifications then
+			Sylix.Notifications.ClearNotifications()
 		end
 	end
-	Vynixus.GetNotificationSettings = function()
-		if Vynixus.Notifications and Vynixus.Notifications.GetNotificationSettings then
-			return Vynixus.Notifications.GetNotificationSettings()
+	Sylix.GetNotificationSettings = function()
+		if Sylix.Notifications and Sylix.Notifications.GetNotificationSettings then
+			return Sylix.Notifications.GetNotificationSettings()
 		end
 	end
 else
 	warn("Failed to load Notifications module")
-	Vynixus.Notifications = {}
-	Vynixus.SendNotification = function() end
-	Vynixus.ClearNotifications = function() end
-	Vynixus.GetNotificationSettings = function() return {} end
+	Sylix.Notifications = {}
+	Sylix.SendNotification = function() end
+	Sylix.ClearNotifications = function() end
+	Sylix.GetNotificationSettings = function() return {} end
 end
 
-return Vynixus
+return Sylix

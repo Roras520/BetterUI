@@ -2,10 +2,9 @@
     Sylix UI Library
     Created by Stacm/Stack
     Build 1.5.2
-    Date: 2025-11-05
+    Date: 2025-11-07
     Changelogs:
-	- I really have to start listing down the changes I've made after I do them..
-	- Fixed the Fluent Tab Accent Bar animation not working.
+	- Better module loading system
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -43,74 +42,12 @@ _G.SYLIX_LOADED = true
 local Sylix = {}
 _G.Sylix = Sylix
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local SylixModulesFolder = Instance.new("Folder")
-SylixModulesFolder.Name = "SylixModules"
-SylixModulesFolder.Parent = ReplicatedStorage
-
-function createModule(name, src)
-	local module = Instance.new("ModuleScript")
-	module.Name = name
-	module.Parent = SylixModulesFolder
-	module.Source = src
-	return module
-end
-
-local moduleCache = {}
-local SafeLoadIteration = 0
-local function SafeLoad(sources)
-	for _, source in ipairs(sources or {}) do
-        SafeLoadIteration = SafeLoadIteration + 1
-		local ok, result
-		if typeof(source) == "string" then
-			if moduleCache[source] ~= nil then
-				return moduleCache[source]
-			end
-			ok, result = pcall(function()
-				local code = game:HttpGet(source, true)
-				if not code or code == "" then
-					error("Empty response from server")
-				end
-				local loaded = loadstring(code)
-				if not loaded then
-					error("Failed to compile code")
-				end
-				return loaded()
-			end)
-			if ok and result then
-				moduleCache[source] = result
-				return result
-			else
-				warn("SafeLoad failed for:", source, "- Error:", tostring(result))
-			end
-		elseif typeof(source) == "function" then
-			ok, result = pcall(source)
-			if ok and result then print("Failed to retrive code from github, using hardcoded module source. Module Loader Iteration: " .. tostring(SafeLoadIteration)) return result end
-		end
-	end
-	return nil
-end
-
-Sylix.SafeLoad = SafeLoad
+local UtilitiesLoader = loadstring(game:HttpGet("https://raw.githubusercontent.com/Roras520/Lib/refs/heads/main/UtilLoader"))()
+_G.Stack_UtilLoader = UtilitiesLoader
 
 local MODULES = {
-	Acrylic = function()
-		return SafeLoad({
-			"https://raw.githubusercontent.com/Number2189/UI/refs/heads/main/AcrylicBlur",
-			function()
-				local v0=game:GetService("Lighting");local v1=workspace.CurrentCamera;local v2=Vector2.new(10,10);local v3=0.01;local v4=1 -1e-7 ;local v5=0.25;local v6=Instance.new("DepthOfFieldEffect");v6.FarIntensity=0;v6.NearIntensity=v5;v6.FocusDistance=0.25;v6.InFocusRadius=0;v6.Parent=v0;local v12={};local v13={};local v14={};local v15={};v15.__index=v15;function rayPlaneIntersect(v21,v22,v23,v24) local v25=v22;local v26=v24;local v27=v23-v21 ;local v28=(v25.x * v27.x) + (v25.y * v27.y) + (v25.z * v27.z) ;local v29=(v25.x * v26.x) + (v25.y * v26.y) + (v25.z * v26.z) ;local v30= -v28/v29 ;return v23 + (v30 * v24) ,v30;end function rebuildPartsList() v12={};v13={};for v74,v75 in pairs(v14) do table.insert(v12,v75);table.insert(v13,v74);end end v15.new=function(v31,v32) local v33=Instance.new("Part");v33.Size=Vector3.new(1,1,1) * 0.01 ;v33.Anchored=true;v33.CanCollide=false;v33.CanTouch=false;v33.Material=Enum.Material.Glass;v33.Transparency=v4;v33.Parent=workspace.CurrentCamera;local v43;if (v32=="Rectangle") then v43=Instance.new("BlockMesh");v43.Parent=v33;elseif (v32=="Oval") then v43=Instance.new("SpecialMesh");v43.MeshType=Enum.MeshType.Sphere;v43.Parent=v33;end local v44=false;local v45=v31;while true do v45=v45.Parent;if (v45 and v45:IsA("ScreenGui")) then v44=v45.IgnoreGuiInset;break;elseif (v45==nil) then break;end end local v46=setmetatable({Frame=v31,Part=v33,Mesh=v43,IgnoreGuiInset=v44},v15);v14[v46]=v33;rebuildPartsList();game:GetService("RunService"):BindToRenderStep("AcrylicBlur_"   .. tostring(v46) ,Enum.RenderPriority.Camera.Value + 1 ,function() v33.CFrame=v1.CFrame * CFrame.new(0,0,0) ;v15.updateAll();end);return v46;end;function updateGui(v48) if  not v48.Frame.Visible then v48.Part.Transparency=1;return;end local v49=workspace.CurrentCamera;local v50=v48.Frame;local v51=v48.Part;local v52=v48.Mesh;v51.Transparency=v4;local v54=v50.AbsolutePosition;local v55=v50.AbsoluteSize;local v56=v54 + v2 ;local v57=(v56 + v55) -(v2 * 2) ;v56=Vector2.new(math.max(v56.X,v54.X),math.max(v56.Y,v54.Y));v57=Vector2.new(math.min(v57.X,v54.X + v55.X ),math.min(v57.Y,v54.Y + v55.Y ));local v58,v59;if v48.IgnoreGuiInset then v58=v49:ViewportPointToRay(v56.X,v56.Y,1);v59=v49:ViewportPointToRay(v57.X,v57.Y,1);else v58=v49:ScreenPointToRay(v56.X,v56.Y,1);v59=v49:ScreenPointToRay(v57.X,v57.Y,1);end local v60=v49.CFrame.Position + (v49.CFrame.LookVector * (0.05 -v49.NearPlaneZ)) ;local v61=v49.CFrame.LookVector;local v62=rayPlaneIntersect(v60,v61,v58.Origin,v58.Direction);local v63=rayPlaneIntersect(v60,v61,v59.Origin,v59.Direction);local v62=v49.CFrame:PointToObjectSpace(v62);local v63=v49.CFrame:PointToObjectSpace(v63);local v64=v63-v62 ;local v65=(v62 + v63)/2 ;v52.Offset=v65;v52.Scale=v64/v3 ;end v15.updateAll=function() for v78=1, #v13 do updateGui(v13[v78]);end if ( #v12>0) then local v81={};for v84=1, #v12 do v81[v84]=workspace.CurrentCamera.CFrame;end local v82={};for v87=1, #v12 do if ((typeof(v12[v87])=="Instance") and v12[v87]:IsA("BasePart")) then table.insert(v82,v12[v87]);end end workspace:BulkMoveTo(v82,v81,Enum.BulkMoveMode.FireCFrameChanged);end v6.FocusDistance=0.25 -v1.NearPlaneZ ;end;v15.Destroy=function(v69) game:GetService("RunService"):UnbindFromRenderStep("AcrylicBlur_"   .. tostring(v69) );v69.Part:Destroy();v14[v69]=nil;rebuildPartsList();end;v15.SetIntensity=function(v71,v72) v6.NearIntensity=v72;end;return v15;
-			end,
-		})
-	end,
-	Notifications = function()
-		return SafeLoad({
-			"https://raw.githubusercontent.com/Roras520/Lib/refs/heads/main/Notifications",
-			function()
-				local v0={};local v1=false;local v2=_G.Stack_NotificationsLibrary~=nil ;local v3=0.3;local v4=6;local v5=1;local v6=20;local function v7() local v8=game:GetService("Players");local v9=game:GetService("TweenService");local v10=game:GetService("VRService");local v11=game:GetService("RunService");local v12={};v12.createCorner=function(v35,v36) if  not v35 then return nil;end local v37=Instance.new("UICorner");v37.CornerRadius=UDim.new(0,v36 or 8 );v37.Parent=v35;return v37;end;v12.tween=function(v40,v41,v42,v43,v44) if ( not v40 or  not v41) then return nil;end v42=v42 or 0.2 ;v43=v43 or Enum.EasingStyle.Quad ;v44=v44 or Enum.EasingDirection.Out ;return v9:Create(v40,TweenInfo.new(v42,v43,v44),v41);end;local v15=v8.LocalPlayer;local v16=(v11:IsStudio() and v15.PlayerGui) or game:GetService("CoreGui") ;local v17,v18=pcall(function() return v15.Character or v15.CharacterAdded:Wait() ;end);if  not v17 then warn("Failed to get character:",v18);return nil;end local v19=v18:FindFirstChild("Head");local v20={MaxNotifications=5,Cooldown=0.6,MessageLifetime=4,SizePC=UDim2.new(0,250,0,60),SizeVR=Vector3.new(2,1,0.1),TextColor=Color3.fromRGB(255,255,255),Font=Enum.Font.Code,TextSizePC=28,TextSizeVR=30.47,SpacingPC=8,SpacingVR=0.75,VROffset=Vector3.new(0,1.06,3),Enabled=true};local v21={Queue={},LastSendTime=0,ActiveCount=0};local v22,v23,v24,v25,v26;local v27=false;local v28="";local v29=false;local function v30() local v45=tick();local v46=v20.MessageLifetime;local v47=v20.MaxNotifications;for v109= #v21.Queue,1, -1 do if (v21.Queue[v109] and ((v45-v21.Queue[v109].time)>v46)) then table.remove(v21.Queue,v109);v21.ActiveCount-=1 end end while  #v21.Queue>v47  do table.remove(v21.Queue,1);v21.ActiveCount-=1 end local v48={};for v110,v111 in ipairs(v21.Queue) do table.insert(v48,v111.text);end if v26 then v26.Text=table.concat(v48,"\n");v26.Visible=v20.Enabled and ( #v21.Queue>0) ;end end local function v31(v49,v50) if  not v20.Enabled then return;end if (v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end if (v21.ActiveCount>=v20.MaxNotifications) then return;end local v51=Instance.new("Frame");v51.Name="Notif";v51.Parent=v23;v51.BackgroundColor3=Color3.new(0.0784314,0.0784314,0.0980392);v51.BackgroundTransparency=0.25;v51.BorderColor3=Color3.new(0,0,0);v51.BorderSizePixel=0;v51.Position=UDim2.new(0.698148131,0,0.91481483,0);v51.Size=UDim2.new(0,298,0,51);v12.createCorner(v51,v4);local v60=Instance.new("TextLabel");v60.Name="Title";v60.Parent=v51;v60.BackgroundTransparency=1;v60.BorderSizePixel=0;v60.Position=UDim2.new(0.0449179821,0,0.156111494,0);v60.Size=UDim2.new(0,310,0,17);v60.Font=Enum.Font.SourceSansSemibold;v60.Text=v50 or "Title" ;v60.TextColor3=Color3.new(1,1,1);v60.TextSize=16;v60.TextXAlignment=Enum.TextXAlignment.Left;local v74=Instance.new("TextLabel");v74.Name="Description";v74.Parent=v51;v74.BackgroundTransparency=1;v74.BorderSizePixel=0;v74.Position=UDim2.new(0.0432063378,0,0.502512991,0);v74.Size=UDim2.new(0,301,0,17);v74.Font=Enum.Font.SourceSans;v74.Text=v49 or "" ;v74.TextColor3=Color3.new(1,1,1);v74.TextSize=14;v74.TextXAlignment=Enum.TextXAlignment.Left;v21.LastSendTime=tick();v21.ActiveCount+=1 task.delay(v20.MessageLifetime,function() if v51.Parent then v12.tween(v51,{Position=UDim2.new(v5,v6,0,0),BackgroundTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v60,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();v12.tween(v74,{TextTransparency=1},v3,Enum.EasingStyle.Quart):Play();task.wait(v3);v51:Destroy();v21.ActiveCount-=1 end end);end local function v32(v88,v89) if (v10.VREnabled and  not v27) then if  not v29 then v29=true;v31(v28 or "VR setup failed" ,"Notification Launch Error");end v31(v88,v89);return;end if  not (v20.Enabled and v10.VREnabled and v27) then return;end if ((tick() -v21.LastSendTime)<v20.Cooldown) then return;end v21.LastSendTime=tick();v21.ActiveCount+=1 table.insert(v21.Queue,{text=v88,time=tick()});if  not v1 then v1=true;v11:BindToRenderStep("UpdateVRNotifications",1,v30);end v30();end if (v10.VREnabled and v19) then local v112,v113=pcall(function() v24=Instance.new("Part");v24.Anchored=false;v24.CanCollide=false;v24.CanQuery=false;v24.CanTouch=false;v24.Massless=true;v24.Transparency=1;v24.Size=v20.SizeVR;v24.Parent=workspace;v25=Instance.new("SurfaceGui");v25.Face=Enum.NormalId.Back;v25.Adornee=v24;v25.AlwaysOnTop=true;v25.Parent=v24;v26=Instance.new("TextLabel");v26.BackgroundTransparency=1;v26.TextColor3=v20.TextColor;v26.Font=v20.Font;v26.TextSize=v20.TextSizeVR;v26.Size=UDim2.new(1,0,1,0);v26.TextYAlignment=Enum.TextYAlignment.Top;v26.Visible=false;v26.Parent=v25;v24.CFrame=v19.CFrame * CFrame.new(v20.VROffset) ;local v145=Instance.new("Weld");v145.Name="NotifWeld";v145.Part0=v19;v145.Part1=v24;v145.C1=CFrame.new(0,v20.SpacingVR,1);v145.Parent=v24;v24.CFrame=CFrame.new(v24.Position,v19.Position);v27=true;end);if  not v112 then warn("VR Notification Setup Failed:",tostring(v113));v28=tostring(v113);v27=false;end elseif (v10.VREnabled and  not v19) then v28="LocalHead not found";warn("VR Notification Setup Failed:",v28);v27=false;end local v33,v34=pcall(function() v22=Instance.new("ScreenGui");v22.IgnoreGuiInset=true;v22.Parent=v16;v23=Instance.new("Frame");v23.BackgroundTransparency=1;v23.Size=UDim2.new(0,320,0,300 + (70 * v20.MaxNotifications) );v23.AnchorPoint=Vector2.new(1,1);v23.Position=UDim2.new(0.98,0,0.98,0);v23.Parent=v22;local v98=Instance.new("UIListLayout");v98.Padding=UDim.new(0,v20.SpacingPC);v98.SortOrder=Enum.SortOrder.LayoutOrder;v98.VerticalAlignment=Enum.VerticalAlignment.Bottom;v98.HorizontalAlignment=Enum.HorizontalAlignment.Right;v98.Parent=v23;end);if  not v33 then warn("PC Notification Setup Failed:",tostring(v34));end return {SendNotification=function(v107,v108) if v10.VREnabled then v32(v107,v108);else v31(v107,v108);end end,ClearNotifications=function() for v114,v115 in ipairs(v23:GetChildren()) do if v115:IsA("Frame") then v115:Destroy();end end end,GetNotificationSettings=function() return v20;end};end if  not v2 then _G.Stack_NotificationsLibrary=v7();end v0=_G.Stack_NotificationsLibrary;return v0;
-			end,
-		})
-	end,
+	Acrylic = UtilitiesLoader.LoadModule("Acrylic"),
+	Notifications = UtilitiesLoader.LoadModule("Notifications"),
 }
 
 local function createDefaultTheme()
@@ -4103,6 +4040,305 @@ THEMES.Default2 = {
 	AccentBarsEnabled = true
 }
 
+function Sylix.CreateExample()
+	local ExampleWindow = Sylix.CreateWindow({
+		Title = "Sylix UI Complete Showcase",
+		Size = UDim2.fromOffset(700, 550),
+		Theme = "Default",
+		Acrylic = false,
+		rippleEffectsOn = false,
+		TabWidth = 160,
+		OnClose = function()
+		end
+	})
+	
+	local TogglesTab = ExampleWindow:CreateTab("Toggles")
+	local TogglesSection1 = TogglesTab:AddSection("Basic Toggles")
+	TogglesSection1:AddToggle("Enable Feature", "Basic toggle example", false, function(value)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Feature: " .. (value and "ON" or "OFF"), "Toggle")
+		end
+	end, "Toggle1")
+	TogglesSection1:AddToggle("Auto Save", "Automatically save settings", true, function(value)
+	end, "Toggle2")
+	TogglesSection1:AddToggle("Show Notifications", "Display notification popups", true, function(value)
+	end, "Toggle3")
+	
+	local TogglesSection2 = TogglesTab:AddSection("Advanced Toggles")
+	TogglesSection2:AddToggle("Advanced Mode", "Enable advanced features", false, function(value)
+	end, "Toggle4")
+	TogglesSection2:AddToggle("Dark Mode", "Switch to dark theme", false, function(value)
+	end, "Toggle5")
+	TogglesSection2:AddToggle("Performance Mode", "Optimize for performance", false, function(value)
+	end, "Toggle6")
+	
+	local ButtonsTab = ExampleWindow:CreateTab("Buttons")
+	local ButtonsSection1 = ButtonsTab:AddSection("Basic Buttons")
+	ButtonsSection1:AddButton("Simple Button", nil, function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Button clicked!", "Action")
+		end
+	end)
+	ButtonsSection1:AddButton("Button with Description", "This button has a description", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Descriptive button pressed", "Action")
+		end
+	end)
+	ButtonsSection1:AddButton("Action Button", "Performs an action when clicked", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Action executed", "Action")
+		end
+	end)
+	
+	local ButtonsSection2 = ButtonsTab:AddSection("Utility Buttons")
+	ButtonsSection2:AddButton("Reset All", "Reset all settings to default", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Settings reset", "Reset")
+		end
+	end)
+	ButtonsSection2:AddButton("Export Config", "Export current configuration", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Configuration exported", "Export")
+		end
+	end)
+	ButtonsSection2:AddButton("Import Config", "Import saved configuration", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Configuration imported", "Import")
+		end
+	end)
+	
+	local SlidersTab = ExampleWindow:CreateTab("Sliders")
+	local SlidersSection1 = SlidersTab:AddSection("Integer Sliders")
+	SlidersSection1:AddSlider("Volume", "Adjust volume level", 0, 100, 50, 0, function(value)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Volume: " .. tostring(value), "Slider")
+		end
+	end, "Slider1")
+	SlidersSection1:AddSlider("Speed", "Control movement speed", 1, 10, 5, 0, function(value)
+	end, "Slider2")
+	SlidersSection1:AddSlider("FOV", "Field of view setting", 70, 120, 90, 0, function(value)
+	end, "Slider3")
+	
+	local SlidersSection2 = SlidersTab:AddSection("Decimal Sliders")
+	SlidersSection2:AddSlider("Animation Speed", "UI animation speed", 0.1, 2, 1, 1, function(value)
+	end, "Slider4")
+	SlidersSection2:AddSlider("Opacity", "Transparency level", 0, 1, 0.5, 2, function(value)
+	end, "Slider5")
+	SlidersSection2:AddSlider("Intensity", "Effect intensity", 0, 100, 50, 1, function(value)
+	end, "Slider6")
+	
+	local DropdownsTab = ExampleWindow:CreateTab("Dropdowns")
+	local DropdownsSection1 = DropdownsTab:AddSection("Single Selection")
+	DropdownsSection1:AddDropdown("Weapon Type", "Select your weapon", {"Sword", "Bow", "Staff", "Axe", "Dagger"}, "Sword", function(value)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Selected: " .. value, "Dropdown")
+		end
+	end, "Dropdown1")
+	DropdownsSection1:AddDropdown("Difficulty", "Game difficulty", {"Easy", "Normal", "Hard", "Extreme"}, "Normal", function(value)
+	end, "Dropdown2")
+	DropdownsSection1:AddDropdown("Quality", "Graphics quality", {"Low", "Medium", "High", "Ultra"}, "High", function(value)
+	end, "Dropdown3")
+	
+	local DropdownsSection2 = DropdownsTab:AddSection("More Options")
+	DropdownsSection2:AddDropdown("Language", "Select language", {"English", "Spanish", "French", "German"}, "English", function(value)
+	end, "Dropdown4")
+	DropdownsSection2:AddDropdown("Region", "Select region", {"US", "EU", "Asia", "Oceania"}, "US", function(value)
+	end, "Dropdown5")
+	
+	local MultiDropdownsTab = ExampleWindow:CreateTab("Multi-Dropdowns")
+	local MultiDropdownsSection1 = MultiDropdownsTab:AddSection("Multiple Selection")
+	MultiDropdownsSection1:AddMultiDropdown("Features", "Select multiple features", {"ESP", "Aimbot", "Speed", "Fly", "NoClip"}, {"ESP", "Speed"}, function(selected)
+		if Sylix.SendNotification then
+			local count = 0
+			for _, enabled in pairs(selected) do
+				if enabled then count = count + 1 end
+			end
+			Sylix.SendNotification("Selected " .. tostring(count) .. " features", "Multi-Dropdown")
+		end
+	end, "MultiDropdown1")
+	MultiDropdownsSection1:AddMultiDropdown("Days Active", "Select active days", {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}, {}, function(selected)
+	end, "MultiDropdown2")
+	
+	local MultiDropdownsSection2 = MultiDropdownsTab:AddSection("Advanced Multi-Select")
+	MultiDropdownsSection2:AddMultiDropdown("Mods", "Enable multiple mods", {"Mod1", "Mod2", "Mod3", "Mod4"}, {"Mod1"}, function(selected)
+	end, "MultiDropdown3")
+	MultiDropdownsSection2:AddMultiDropdown("Filters", "Apply filters", {"Filter A", "Filter B", "Filter C"}, {}, function(selected)
+	end, "MultiDropdown4")
+	
+	local KeybindsTab = ExampleWindow:CreateTab("Keybinds")
+	local KeybindsSection1 = KeybindsTab:AddSection("Toggle Keybinds")
+	KeybindsSection1:AddKeybind("Menu Toggle", "Open/close menu", Enum.KeyCode.RightShift, "Toggle", function(key, mode)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Keybind: " .. tostring(key.Name) .. " (" .. mode .. ")", "Keybind")
+		end
+	end, "Keybind1")
+	KeybindsSection1:AddKeybind("ESP Toggle", "Toggle ESP display", Enum.KeyCode.E, "Toggle", function(key, mode)
+	end, "Keybind2")
+	
+	local KeybindsSection2 = KeybindsTab:AddSection("Hold Keybinds")
+	KeybindsSection2:AddKeybind("Sprint", "Hold to sprint", Enum.KeyCode.LeftShift, "Hold", function(key, mode)
+	end, "Keybind3")
+	KeybindsSection2:AddKeybind("Crouch", "Hold to crouch", Enum.KeyCode.C, "Hold", function(key, mode)
+	end, "Keybind4")
+	
+	local KeybindsSection3 = KeybindsTab:AddSection("Always Keybinds")
+	KeybindsSection3:AddKeybind("Jump", "Always active", Enum.KeyCode.Space, "Always", function(key, mode)
+	end, "Keybind5")
+	
+	local InputsTab = ExampleWindow:CreateTab("Inputs")
+	local InputsSection1 = InputsTab:AddSection("Text Inputs")
+	InputsSection1:AddInput("Player Name", "Enter player name", "Username", "", false, 20, function(value)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Name: " .. value, "Input")
+		end
+	end, "Input1")
+	InputsSection1:AddInput("Message", "Type your message", "Enter message...", "", false, 100, function(value)
+	end, "Input2")
+	
+	local InputsSection2 = InputsTab:AddSection("Numeric Inputs")
+	InputsSection2:AddInput("Age", "Enter your age", "0", "18", true, 3, function(value)
+	end, "Input3")
+	InputsSection2:AddInput("Score", "Enter score value", "0", "0", true, 10, function(value)
+	end, "Input4")
+	
+	local ColorsTab = ExampleWindow:CreateTab("Colors")
+	local ColorsSection1 = ColorsTab:AddSection("RGB Picker")
+	ColorsSection1:AddRGBPicker("Primary Color", "Main color picker", Color3.fromRGB(100, 150, 255), function(color)
+		if Sylix.SendNotification then
+			Sylix.SendNotification("Color: " .. tostring(color), "Color")
+		end
+	end, "RGB1")
+	ColorsSection1:AddRGBPicker("Accent Color", "Secondary color", Color3.fromRGB(255, 100, 150), function(color)
+	end, "RGB2")
+	
+	local ColorsSection2 = ColorsTab:AddSection("More Colors")
+	ColorsSection2:AddRGBPicker("Background Color", "Background color", Color3.fromRGB(30, 30, 30), function(color)
+	end, "RGB3")
+	ColorsSection2:AddRGBPicker("Text Color", "Text color", Color3.fromRGB(255, 255, 255), function(color)
+	end, "RGB4")
+	
+	local TextTab = ExampleWindow:CreateTab("Text & Info")
+	local TextSection1 = TextTab:AddSection("Information")
+	TextSection1:AddParagraph("Welcome", "Welcome to Sylix UI Library! This is a comprehensive showcase of all available features. Explore each tab to see different elements and their capabilities.")
+	TextSection1:AddParagraph("About", "This library provides a modern, customizable UI system for Roblox. All elements support themes, animations, and callbacks.")
+	TextSection1:AddParagraph("Features", "• Toggles with flags\n• Buttons with descriptions\n• Sliders (integer and decimal)\n• Dropdowns (single and multi-select)\n• Keybinds (Toggle, Hold, Always)\n• Text and numeric inputs\n• RGB color pickers\n• Paragraph text display\n• Multiple themes\n• Acrylic blur effects\n• Accent bars")
+	
+	local TextSection2 = TextTab:AddSection("Usage Tips")
+	TextSection2:AddParagraph("Getting Started", "Use Sylix.CreateWindow() to create a window, then add tabs and sections. Each element supports callbacks and optional flags for state management.")
+	TextSection2:AddParagraph("Flags", "Flags allow you to save and load element states. Use the Flags API to export/import configurations.")
+	TextSection2:AddParagraph("Themes", "Switch themes using Sylix.SetTheme(). Available themes include Default, Dark, Midnight, Amethyst, Aqua, Rose, and many more.")
+	
+	local ThemesTab = ExampleWindow:CreateTab("Themes")
+	local ThemesSection1 = ThemesTab:AddSection("Theme Selection")
+	ThemesSection1:AddDropdown("Theme", "Change the UI theme", {"Default", "Dark", "Darker", "Midnight", "Light", "Amethyst", "Aqua", "Rose", "Ocean", "Forest", "Sunset", "Cherry", "Grape", "Crimson", "Emerald", "Gold", "OLED", "Apple", "Halloween", "Cyber", "Lavender", "Neon", "Sky", "Arctic"}, "Default", function(value)
+		if Sylix.SetTheme then
+			Sylix.SetTheme(value)
+			if Sylix.SendNotification then
+				Sylix.SendNotification("Theme: " .. value, "Theme")
+			end
+		end
+	end, "ThemeDropdown")
+	
+	local ThemesSection2 = ThemesTab:AddSection("Quick Theme Buttons")
+	ThemesSection2:AddButton("Default", "Switch to Default theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Default") end
+	end)
+	ThemesSection2:AddButton("Dark", "Switch to Dark theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Dark") end
+	end)
+	ThemesSection2:AddButton("Midnight", "Switch to Midnight theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Midnight") end
+	end)
+	ThemesSection2:AddButton("Amethyst", "Switch to Amethyst theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Amethyst") end
+	end)
+	ThemesSection2:AddButton("Aqua", "Switch to Aqua theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Aqua") end
+	end)
+	ThemesSection2:AddButton("Rose", "Switch to Rose theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("Rose") end
+	end)
+	ThemesSection2:AddButton("OLED", "Switch to OLED theme", function()
+		if Sylix.SetTheme then Sylix.SetTheme("OLED") end
+	end)
+	
+	local AdvancedTab = ExampleWindow:CreateTab("Advanced")
+	local AdvancedSection1 = AdvancedTab:AddSection("Window Effects")
+	AdvancedSection1:AddToggle("Acrylic Blur", "Enable blur effect on window", false, function(value)
+		if Sylix.SetAcrylic then
+			Sylix.SetAcrylic(value)
+			if Sylix.SendNotification then
+				Sylix.SendNotification("Acrylic: " .. (value and "ON" or "OFF"), "Advanced")
+			end
+		end
+	end, "AcrylicToggle")
+	
+	local currentThemeData = Sylix.GetCurrentTheme and Sylix.GetCurrentTheme() or {}
+	local accentBarsEnabled = currentThemeData and currentThemeData.AccentBarsEnabled == true or false
+	AdvancedSection1:AddToggle("Accent Bars", "Toggle accent bars on tabs", accentBarsEnabled, function(value)
+		if Sylix.SetAccentBarsEnabled then
+			Sylix.SetAccentBarsEnabled(value)
+			if Sylix.SendNotification then
+				Sylix.SendNotification("Accent Bars: " .. (value and "ON" or "OFF"), "Advanced")
+			end
+		end
+	end, "AccentBarsToggle")
+	
+	local AdvancedSection2 = AdvancedTab:AddSection("Flags System")
+	AdvancedSection2:AddButton("Export Flags", "Export all flag values", function()
+		if Sylix.Flags and Sylix.Flags.Export then
+			local flags = Sylix.Flags.Export()
+			if Sylix.SendNotification then
+				local count = 0
+				for _ in pairs(flags) do count = count + 1 end
+				Sylix.SendNotification("Exported " .. tostring(count) .. " flags", "Flags")
+			end
+		end
+	end)
+	AdvancedSection2:AddButton("Clear Flags", "Reset all flags", function()
+		if Sylix.Flags and Sylix.Flags.Clear then
+			Sylix.Flags.Clear()
+			if Sylix.SendNotification then
+				Sylix.SendNotification("Flags cleared", "Flags")
+			end
+		end
+	end)
+	
+	local AdvancedSection3 = AdvancedTab:AddSection("Notifications")
+	AdvancedSection3:AddButton("Test Notification", "Send a test notification", function()
+		if Sylix.SendNotification then
+			Sylix.SendNotification("This is a test notification!", "Test")
+		end
+	end)
+	AdvancedSection3:AddButton("Clear All Notifications", "Clear all notifications", function()
+		if Sylix.ClearNotifications then
+			Sylix.ClearNotifications()
+		end
+	end)
+	
+	local toggleConnection
+	toggleConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if input.KeyCode == Enum.KeyCode.K then
+			ExampleWindow:ToggleVisibility()
+		end
+	end)
+	
+	ExampleWindow.Destroy = function()
+		if toggleConnection then
+			toggleConnection:Disconnect()
+			toggleConnection = nil
+		end
+		if ExampleWindow.OnClose then
+			ExampleWindow.OnClose()
+		end
+	end
+
+	ExampleWindow:CreateSettingsTab()
+	
+	return ExampleWindow
+end
+
 local NotificationsModule = MODULES.Notifications()
 if NotificationsModule and type(NotificationsModule) == "table" then
 	Sylix.Notifications = NotificationsModule
@@ -4126,6 +4362,7 @@ else
 	Sylix.Notifications = {}
 	Sylix.SendNotification = function() end
 	Sylix.ClearNotifications = function() end
-	Sylix.GetNotificationSettings = func
+	Sylix.GetNotificationSettings = function() return {} end
+end
 
 return Sylix

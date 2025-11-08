@@ -2,9 +2,11 @@
     Sylix UI Library
     Created by Stacm/Stack
     Build 1.5.2
-    Date: 2025-11-07
+    Date: 2025-11-08
     Changelogs:
-	- Better module loading system
+	- Added background radar gradient
+	- Added DarkGradient and MidnightGalaxy themes with gradient effects
+	- Maybe fixed issue where the theme would not apply correctly when you set it in the window config
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -43,7 +45,6 @@ local Sylix = {}
 _G.Sylix = Sylix
 
 local UtilitiesLoader = loadstring(game:HttpGet("https://raw.githubusercontent.com/Roras520/Lib/refs/heads/main/UtilLoader"))()
-_G.Stack_UtilLoader = UtilitiesLoader
 
 local MODULES = {
 	Acrylic = UtilitiesLoader.LoadModule("Acrylic"),
@@ -95,6 +96,20 @@ local function createDefaultTheme()
 		MainBackgroundTransparencyWhenAcrylic = 0.24,
 
 		AccentBarsEnabled = true,
+		
+		RadarGrad = {
+			Enabled = false,
+			Colors = {
+				{Position = 0, Color = Color3.fromRGB(35, 35, 35)},
+				{Position = 0.7, Color = Color3.fromRGB(35, 35, 35)},
+				{Position = 1, Color = Color3.fromRGB(86, 195, 245)}
+			},
+			RotationSpeed = 15,
+			Transparency = {
+				{Position = 0, Transparency = 0},
+				{Position = 1, Transparency = 0}
+			}
+		},
 
 		Fonts = {
 			TitleText = Enum.Font.GothamBold,
@@ -376,63 +391,65 @@ THEMES = {
 		TabUnselected = Color3.fromRGB(10, 10, 10),
 		SectionBorder = Color3.fromRGB(8, 8, 8),
 	},
-	Apple = mergeTheme({
-		Accent = Color3.fromRGB(102, 217, 104),
-		ElementColor = Color3.fromRGB(50, 50, 50),
-		ElementBorder = Color3.fromRGB(60, 60, 60),
-		TextColor = Color3.fromRGB(255, 255, 255),
-		SubTextColor = Color3.fromRGB(174, 174, 178),
-		SectionBG = Color3.fromRGB(45, 45, 45),
-		MainBG = Color3.fromRGB(40, 40, 40),
-		TitleBarLine = Color3.fromRGB(55, 55, 55),
-		TabUnselected = Color3.fromRGB(45, 45, 45),
-		SectionBorder = Color3.fromRGB(55, 55, 55),
-
-		ToggleKnobColor = Color3.fromRGB(255, 255, 255),
-		ToggleKnobTransparency = 0,
-		ToggleKnobTransparencyOff = 0,
-		ToggleSliderBackgroundColor = Color3.fromRGB(102, 217, 104),
-		ToggleSliderBackgroundTransparency = 0,
-		ToggleSliderBackgroundTransparencyOff = 0.9,
-		ToggleSliderStrokeColor = Color3.fromRGB(60, 60, 60),
-		ToggleSliderStrokeTransparency = 0.24,
-		ToggleSliderStrokeTransparencyOff = 0.24,
-
-		SliderRailColor = Color3.fromRGB(55, 55, 55),
-		SliderRailTransparency = 0.3,
-		SliderFillColor = Color3.fromRGB(102, 217, 104),
-		SliderFillTransparency = 0,
-		SliderDotColor = Color3.fromRGB(102, 217, 104),
-		SliderDotTransparency = 0,
-		SliderBackgroundTransparency = 0.85,
-
-		ColorPreviewTransparency = 0,
-
-		TitleBarLineTransparency = 0.6,
-		SectionBorderTransparency = 0.8,
-		SectionBackgroundTransparency = 0.4,
-
-		ElementTransparency = 0.85,
-		ElementTransparencyHover = 0.8,
-		ElementTransparencyPress = 0.75,
-
-		MainBorderTransparency = 0.8,
-		TabSelectedLineTransparency = 0,
-
-		KeybindButtonTransparency = 0.85,
-		KeybindButtonStrokeTransparency = 0.8,
-
-		InputTransparency = 0.85,
-		InputValueBoxTransparency = 0.83,
-		InputValueBoxStrokeTransparency = 0.75,
-
-		RGBSlidersContainerTransparency = 0.85,
-		RGBSlidersContainerStrokeTransparency = 0.8,
-		RGBSliderBarTransparency = 0,
-
-		DropdownButtonTransparency = 0.85,
-		DropdownButtonStrokeTransparency = 0.8,
-	}),
+	DarkGradient = {
+		Accent = Color3.fromRGB(150, 100, 255),
+		ElementColor = Color3.fromRGB(18, 18, 18),
+		ElementBorder = Color3.fromRGB(8, 8, 8),
+		TextColor = Color3.fromRGB(240, 240, 240),
+		SubTextColor = Color3.fromRGB(160, 160, 160),
+		SectionBG = Color3.fromRGB(12, 12, 12),
+		MainBG = Color3.fromRGB(10, 10, 10),
+		TitleBarLine = Color3.fromRGB(25, 25, 25),
+		TabUnselected = Color3.fromRGB(15, 15, 15),
+		SectionBorder = Color3.fromRGB(20, 20, 20),
+		ToggleSliderBackgroundColor = Color3.fromRGB(150, 100, 255),
+		SliderFillColor = Color3.fromRGB(150, 100, 255),
+		SliderDotColor = Color3.fromRGB(150, 100, 255),
+		AccentBarsEnabled = true,
+		Gradient = {
+			Enabled = true,
+			Colors = {
+				{Position = 0, Color = Color3.fromRGB(10, 10, 10)},
+				{Position = 0.7, Color = Color3.fromRGB(10, 10, 10)},
+				{Position = 1, Color = Color3.fromRGB(80, 40, 120)}
+			},
+			RotationSpeed = 15,
+			Transparency = {
+				{Position = 0, Transparency = 0},
+				{Position = 1, Transparency = 0}
+			}
+		}
+	},
+	MidnightGalaxy = {
+		Accent = Color3.fromRGB(150, 100, 255),
+		ElementColor = Color3.fromRGB(20, 15, 35),
+		ElementBorder = Color3.fromRGB(40, 30, 60),
+		TextColor = Color3.fromRGB(220, 210, 255),
+		SubTextColor = Color3.fromRGB(150, 140, 200),
+		SectionBG = Color3.fromRGB(15, 10, 30),
+		MainBG = Color3.fromRGB(10, 5, 20),
+		TitleBarLine = Color3.fromRGB(80, 50, 150),
+		TabUnselected = Color3.fromRGB(25, 18, 45),
+		SectionBorder = Color3.fromRGB(50, 35, 90),
+		ToggleSliderBackgroundColor = Color3.fromRGB(150, 100, 255),
+		SliderFillColor = Color3.fromRGB(150, 100, 255),
+		SliderDotColor = Color3.fromRGB(150, 100, 255),
+		AccentBarsEnabled = true,
+		Gradient = {
+			Enabled = true,
+			Colors = {
+				{Position = 0, Color = Color3.fromRGB(5, 5, 15)},
+				{Position = 0.4, Color = Color3.fromRGB(20, 10, 40)},
+				{Position = 0.7, Color = Color3.fromRGB(60, 30, 120)},
+				{Position = 1, Color = Color3.fromRGB(255, 100, 200)}
+			},
+			RotationSpeed = 12,
+			Transparency = {
+				{Position = 0, Transparency = 0},
+				{Position = 1, Transparency = 0}
+			}
+		}
+	},
 	Halloween = {
 		Accent = Color3.fromRGB(255, 140, 0),
 		ElementColor = Color3.fromRGB(120, 80, 60),
@@ -516,6 +533,8 @@ local themeObjects = {}
 local flagSubscribers = {}
 local currentWindow = nil
 local currentBlurObject = nil
+local currentGradient = nil
+local currentGradientConnection = nil
 
 local function createDefaultCustomization()
 	return {
@@ -995,6 +1014,16 @@ local function cleanupExistingUI()
 			currentBlurObject = nil
 		end
 
+		if currentGradient then
+			currentGradient:Destroy()
+			currentGradient = nil
+		end
+
+		if currentGradientConnection then
+			currentGradientConnection:Disconnect()
+			currentGradientConnection = nil
+		end
+
 		if activeWindow.ScreenGui and activeWindow.ScreenGui.Parent then
 			activeWindow.ScreenGui:Destroy()
 		end
@@ -1112,30 +1141,6 @@ local acrylicEnabled = false
 
 Sylix.SetTheme = SetTheme
 
-local function loadFromMarketplace(AssetId)
-	local Success, ModuleCode = pcall(function()
-		local Url = "https://assetdelivery.roblox.com/v1/asset?id=" .. tostring(AssetId)
-		local Response = game:HttpGet(Url, true)
-		if Response and Response ~= "" then
-			return loadstring(Response)()
-		end
-	end)
-
-	if Success and ModuleCode then
-		return ModuleCode
-	end
-
-	Success, ModuleCode = pcall(function()
-		local Url = "https://www.roblox.com/asset/?id=" .. tostring(AssetId)
-		local Response = game:HttpGet(Url, true)
-		if Response and Response ~= "" then
-			return loadstring(Response)()
-		end
-	end)
-
-	return Success and ModuleCode or nil
-end
-
 local function SetAcrylic(Enabled)
 	acrylicEnabled = Enabled
 
@@ -1171,6 +1176,66 @@ local function SetAcrylic(Enabled)
 	end
 end
 
+local function ApplyGradient()
+	if not currentWindow or not currentWindow.ScreenGui then
+		return
+	end
+	
+	local MainFrame = currentWindow.ScreenGui:FindFirstChild("MainFrame")
+	if not MainFrame then
+		return
+	end
+	
+	local CurrentThemeData = Creator.GetCurrentTheme()
+	local gradientSettings = CurrentThemeData.Gradient
+	
+	if currentGradient then
+		currentGradient:Destroy()
+		currentGradient = nil
+	end
+	
+	if currentGradientConnection then
+		currentGradientConnection:Disconnect()
+		currentGradientConnection = nil
+	end
+	
+	if not gradientSettings or not gradientSettings.Enabled then
+		return
+	end
+	
+	local gradient = Instance.new("UIGradient")
+	gradient.Name = "ThemeGradient"
+	
+	local colorKeypoints = {}
+	for _, colorData in ipairs(gradientSettings.Colors or {}) do
+		table.insert(colorKeypoints, ColorSequenceKeypoint.new(colorData.Position, colorData.Color))
+	end
+	gradient.Color = ColorSequence.new(colorKeypoints)
+	
+	local transparencyKeypoints = {}
+	for _, transpData in ipairs(gradientSettings.Transparency or {{Position = 0, Transparency = 0}, {Position = 1, Transparency = 0}}) do
+		table.insert(transparencyKeypoints, NumberSequenceKeypoint.new(transpData.Position, transpData.Transparency))
+	end
+	gradient.Transparency = NumberSequence.new(transparencyKeypoints)
+	
+	gradient.Rotation = 0
+	gradient.Parent = MainFrame
+	
+	currentGradient = gradient
+	
+	local rotationSpeed = gradientSettings.RotationSpeed or 15
+	currentGradientConnection = RunService.Heartbeat:Connect(function(deltaTime)
+		if currentGradient and currentGradient.Parent then
+			currentGradient.Rotation = (currentGradient.Rotation + (rotationSpeed * deltaTime)) % 360
+		else
+			if currentGradientConnection then
+				currentGradientConnection:Disconnect()
+				currentGradientConnection = nil
+			end
+		end
+	end)
+end
+
 local function SetCustomization(Customization)
 	if not Customization or type(Customization) ~= "table" then
 		return
@@ -1202,6 +1267,7 @@ Sylix.SetCustomization = SetCustomization
 Sylix.GetCustomization = function() return currentCustomization end
 Sylix.GetCurrentTheme = Creator.GetCurrentTheme
 Sylix.mergeTheme = mergeTheme
+Sylix.ApplyGradient = ApplyGradient
 
 local function SetAccentBarsEnabled(Enabled)
 	if type(Enabled) ~= "boolean" then
@@ -3973,12 +4039,13 @@ end
 	currentWindow = Window
 
 	SetAcrylic(Window.Acrylic)
-	SetTheme(currentTheme)
+	SetTheme(Window.Theme)
+	ApplyGradient()
 
 	task.spawn(function()
 		task.wait(5)
 		if Config.Theme then
-			SetTheme(Config.Theme)
+			SetTheme(Window.Theme)
 		end
 	end)
 
@@ -4040,306 +4107,7 @@ THEMES.Default2 = {
 	AccentBarsEnabled = true
 }
 
-function Sylix.CreateExample()
-	local ExampleWindow = Sylix.CreateWindow({
-		Title = "Sylix UI Complete Showcase",
-		Size = UDim2.fromOffset(700, 550),
-		Theme = "Default",
-		Acrylic = false,
-		rippleEffectsOn = false,
-		TabWidth = 160,
-		OnClose = function()
-		end
-	})
-	
-	local TogglesTab = ExampleWindow:CreateTab("Toggles")
-	local TogglesSection1 = TogglesTab:AddSection("Basic Toggles")
-	TogglesSection1:AddToggle("Enable Feature", "Basic toggle example", false, function(value)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Feature: " .. (value and "ON" or "OFF"), "Toggle")
-		end
-	end, "Toggle1")
-	TogglesSection1:AddToggle("Auto Save", "Automatically save settings", true, function(value)
-	end, "Toggle2")
-	TogglesSection1:AddToggle("Show Notifications", "Display notification popups", true, function(value)
-	end, "Toggle3")
-	
-	local TogglesSection2 = TogglesTab:AddSection("Advanced Toggles")
-	TogglesSection2:AddToggle("Advanced Mode", "Enable advanced features", false, function(value)
-	end, "Toggle4")
-	TogglesSection2:AddToggle("Dark Mode", "Switch to dark theme", false, function(value)
-	end, "Toggle5")
-	TogglesSection2:AddToggle("Performance Mode", "Optimize for performance", false, function(value)
-	end, "Toggle6")
-	
-	local ButtonsTab = ExampleWindow:CreateTab("Buttons")
-	local ButtonsSection1 = ButtonsTab:AddSection("Basic Buttons")
-	ButtonsSection1:AddButton("Simple Button", nil, function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Button clicked!", "Action")
-		end
-	end)
-	ButtonsSection1:AddButton("Button with Description", "This button has a description", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Descriptive button pressed", "Action")
-		end
-	end)
-	ButtonsSection1:AddButton("Action Button", "Performs an action when clicked", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Action executed", "Action")
-		end
-	end)
-	
-	local ButtonsSection2 = ButtonsTab:AddSection("Utility Buttons")
-	ButtonsSection2:AddButton("Reset All", "Reset all settings to default", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Settings reset", "Reset")
-		end
-	end)
-	ButtonsSection2:AddButton("Export Config", "Export current configuration", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Configuration exported", "Export")
-		end
-	end)
-	ButtonsSection2:AddButton("Import Config", "Import saved configuration", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Configuration imported", "Import")
-		end
-	end)
-	
-	local SlidersTab = ExampleWindow:CreateTab("Sliders")
-	local SlidersSection1 = SlidersTab:AddSection("Integer Sliders")
-	SlidersSection1:AddSlider("Volume", "Adjust volume level", 0, 100, 50, 0, function(value)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Volume: " .. tostring(value), "Slider")
-		end
-	end, "Slider1")
-	SlidersSection1:AddSlider("Speed", "Control movement speed", 1, 10, 5, 0, function(value)
-	end, "Slider2")
-	SlidersSection1:AddSlider("FOV", "Field of view setting", 70, 120, 90, 0, function(value)
-	end, "Slider3")
-	
-	local SlidersSection2 = SlidersTab:AddSection("Decimal Sliders")
-	SlidersSection2:AddSlider("Animation Speed", "UI animation speed", 0.1, 2, 1, 1, function(value)
-	end, "Slider4")
-	SlidersSection2:AddSlider("Opacity", "Transparency level", 0, 1, 0.5, 2, function(value)
-	end, "Slider5")
-	SlidersSection2:AddSlider("Intensity", "Effect intensity", 0, 100, 50, 1, function(value)
-	end, "Slider6")
-	
-	local DropdownsTab = ExampleWindow:CreateTab("Dropdowns")
-	local DropdownsSection1 = DropdownsTab:AddSection("Single Selection")
-	DropdownsSection1:AddDropdown("Weapon Type", "Select your weapon", {"Sword", "Bow", "Staff", "Axe", "Dagger"}, "Sword", function(value)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Selected: " .. value, "Dropdown")
-		end
-	end, "Dropdown1")
-	DropdownsSection1:AddDropdown("Difficulty", "Game difficulty", {"Easy", "Normal", "Hard", "Extreme"}, "Normal", function(value)
-	end, "Dropdown2")
-	DropdownsSection1:AddDropdown("Quality", "Graphics quality", {"Low", "Medium", "High", "Ultra"}, "High", function(value)
-	end, "Dropdown3")
-	
-	local DropdownsSection2 = DropdownsTab:AddSection("More Options")
-	DropdownsSection2:AddDropdown("Language", "Select language", {"English", "Spanish", "French", "German"}, "English", function(value)
-	end, "Dropdown4")
-	DropdownsSection2:AddDropdown("Region", "Select region", {"US", "EU", "Asia", "Oceania"}, "US", function(value)
-	end, "Dropdown5")
-	
-	local MultiDropdownsTab = ExampleWindow:CreateTab("Multi-Dropdowns")
-	local MultiDropdownsSection1 = MultiDropdownsTab:AddSection("Multiple Selection")
-	MultiDropdownsSection1:AddMultiDropdown("Features", "Select multiple features", {"ESP", "Aimbot", "Speed", "Fly", "NoClip"}, {"ESP", "Speed"}, function(selected)
-		if Sylix.SendNotification then
-			local count = 0
-			for _, enabled in pairs(selected) do
-				if enabled then count = count + 1 end
-			end
-			Sylix.SendNotification("Selected " .. tostring(count) .. " features", "Multi-Dropdown")
-		end
-	end, "MultiDropdown1")
-	MultiDropdownsSection1:AddMultiDropdown("Days Active", "Select active days", {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}, {}, function(selected)
-	end, "MultiDropdown2")
-	
-	local MultiDropdownsSection2 = MultiDropdownsTab:AddSection("Advanced Multi-Select")
-	MultiDropdownsSection2:AddMultiDropdown("Mods", "Enable multiple mods", {"Mod1", "Mod2", "Mod3", "Mod4"}, {"Mod1"}, function(selected)
-	end, "MultiDropdown3")
-	MultiDropdownsSection2:AddMultiDropdown("Filters", "Apply filters", {"Filter A", "Filter B", "Filter C"}, {}, function(selected)
-	end, "MultiDropdown4")
-	
-	local KeybindsTab = ExampleWindow:CreateTab("Keybinds")
-	local KeybindsSection1 = KeybindsTab:AddSection("Toggle Keybinds")
-	KeybindsSection1:AddKeybind("Menu Toggle", "Open/close menu", Enum.KeyCode.RightShift, "Toggle", function(key, mode)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Keybind: " .. tostring(key.Name) .. " (" .. mode .. ")", "Keybind")
-		end
-	end, "Keybind1")
-	KeybindsSection1:AddKeybind("ESP Toggle", "Toggle ESP display", Enum.KeyCode.E, "Toggle", function(key, mode)
-	end, "Keybind2")
-	
-	local KeybindsSection2 = KeybindsTab:AddSection("Hold Keybinds")
-	KeybindsSection2:AddKeybind("Sprint", "Hold to sprint", Enum.KeyCode.LeftShift, "Hold", function(key, mode)
-	end, "Keybind3")
-	KeybindsSection2:AddKeybind("Crouch", "Hold to crouch", Enum.KeyCode.C, "Hold", function(key, mode)
-	end, "Keybind4")
-	
-	local KeybindsSection3 = KeybindsTab:AddSection("Always Keybinds")
-	KeybindsSection3:AddKeybind("Jump", "Always active", Enum.KeyCode.Space, "Always", function(key, mode)
-	end, "Keybind5")
-	
-	local InputsTab = ExampleWindow:CreateTab("Inputs")
-	local InputsSection1 = InputsTab:AddSection("Text Inputs")
-	InputsSection1:AddInput("Player Name", "Enter player name", "Username", "", false, 20, function(value)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Name: " .. value, "Input")
-		end
-	end, "Input1")
-	InputsSection1:AddInput("Message", "Type your message", "Enter message...", "", false, 100, function(value)
-	end, "Input2")
-	
-	local InputsSection2 = InputsTab:AddSection("Numeric Inputs")
-	InputsSection2:AddInput("Age", "Enter your age", "0", "18", true, 3, function(value)
-	end, "Input3")
-	InputsSection2:AddInput("Score", "Enter score value", "0", "0", true, 10, function(value)
-	end, "Input4")
-	
-	local ColorsTab = ExampleWindow:CreateTab("Colors")
-	local ColorsSection1 = ColorsTab:AddSection("RGB Picker")
-	ColorsSection1:AddRGBPicker("Primary Color", "Main color picker", Color3.fromRGB(100, 150, 255), function(color)
-		if Sylix.SendNotification then
-			Sylix.SendNotification("Color: " .. tostring(color), "Color")
-		end
-	end, "RGB1")
-	ColorsSection1:AddRGBPicker("Accent Color", "Secondary color", Color3.fromRGB(255, 100, 150), function(color)
-	end, "RGB2")
-	
-	local ColorsSection2 = ColorsTab:AddSection("More Colors")
-	ColorsSection2:AddRGBPicker("Background Color", "Background color", Color3.fromRGB(30, 30, 30), function(color)
-	end, "RGB3")
-	ColorsSection2:AddRGBPicker("Text Color", "Text color", Color3.fromRGB(255, 255, 255), function(color)
-	end, "RGB4")
-	
-	local TextTab = ExampleWindow:CreateTab("Text & Info")
-	local TextSection1 = TextTab:AddSection("Information")
-	TextSection1:AddParagraph("Welcome", "Welcome to Sylix UI Library! This is a comprehensive showcase of all available features. Explore each tab to see different elements and their capabilities.")
-	TextSection1:AddParagraph("About", "This library provides a modern, customizable UI system for Roblox. All elements support themes, animations, and callbacks.")
-	TextSection1:AddParagraph("Features", "• Toggles with flags\n• Buttons with descriptions\n• Sliders (integer and decimal)\n• Dropdowns (single and multi-select)\n• Keybinds (Toggle, Hold, Always)\n• Text and numeric inputs\n• RGB color pickers\n• Paragraph text display\n• Multiple themes\n• Acrylic blur effects\n• Accent bars")
-	
-	local TextSection2 = TextTab:AddSection("Usage Tips")
-	TextSection2:AddParagraph("Getting Started", "Use Sylix.CreateWindow() to create a window, then add tabs and sections. Each element supports callbacks and optional flags for state management.")
-	TextSection2:AddParagraph("Flags", "Flags allow you to save and load element states. Use the Flags API to export/import configurations.")
-	TextSection2:AddParagraph("Themes", "Switch themes using Sylix.SetTheme(). Available themes include Default, Dark, Midnight, Amethyst, Aqua, Rose, and many more.")
-	
-	local ThemesTab = ExampleWindow:CreateTab("Themes")
-	local ThemesSection1 = ThemesTab:AddSection("Theme Selection")
-	ThemesSection1:AddDropdown("Theme", "Change the UI theme", {"Default", "Dark", "Darker", "Midnight", "Light", "Amethyst", "Aqua", "Rose", "Ocean", "Forest", "Sunset", "Cherry", "Grape", "Crimson", "Emerald", "Gold", "OLED", "Apple", "Halloween", "Cyber", "Lavender", "Neon", "Sky", "Arctic"}, "Default", function(value)
-		if Sylix.SetTheme then
-			Sylix.SetTheme(value)
-			if Sylix.SendNotification then
-				Sylix.SendNotification("Theme: " .. value, "Theme")
-			end
-		end
-	end, "ThemeDropdown")
-	
-	local ThemesSection2 = ThemesTab:AddSection("Quick Theme Buttons")
-	ThemesSection2:AddButton("Default", "Switch to Default theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Default") end
-	end)
-	ThemesSection2:AddButton("Dark", "Switch to Dark theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Dark") end
-	end)
-	ThemesSection2:AddButton("Midnight", "Switch to Midnight theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Midnight") end
-	end)
-	ThemesSection2:AddButton("Amethyst", "Switch to Amethyst theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Amethyst") end
-	end)
-	ThemesSection2:AddButton("Aqua", "Switch to Aqua theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Aqua") end
-	end)
-	ThemesSection2:AddButton("Rose", "Switch to Rose theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("Rose") end
-	end)
-	ThemesSection2:AddButton("OLED", "Switch to OLED theme", function()
-		if Sylix.SetTheme then Sylix.SetTheme("OLED") end
-	end)
-	
-	local AdvancedTab = ExampleWindow:CreateTab("Advanced")
-	local AdvancedSection1 = AdvancedTab:AddSection("Window Effects")
-	AdvancedSection1:AddToggle("Acrylic Blur", "Enable blur effect on window", false, function(value)
-		if Sylix.SetAcrylic then
-			Sylix.SetAcrylic(value)
-			if Sylix.SendNotification then
-				Sylix.SendNotification("Acrylic: " .. (value and "ON" or "OFF"), "Advanced")
-			end
-		end
-	end, "AcrylicToggle")
-	
-	local currentThemeData = Sylix.GetCurrentTheme and Sylix.GetCurrentTheme() or {}
-	local accentBarsEnabled = currentThemeData and currentThemeData.AccentBarsEnabled == true or false
-	AdvancedSection1:AddToggle("Accent Bars", "Toggle accent bars on tabs", accentBarsEnabled, function(value)
-		if Sylix.SetAccentBarsEnabled then
-			Sylix.SetAccentBarsEnabled(value)
-			if Sylix.SendNotification then
-				Sylix.SendNotification("Accent Bars: " .. (value and "ON" or "OFF"), "Advanced")
-			end
-		end
-	end, "AccentBarsToggle")
-	
-	local AdvancedSection2 = AdvancedTab:AddSection("Flags System")
-	AdvancedSection2:AddButton("Export Flags", "Export all flag values", function()
-		if Sylix.Flags and Sylix.Flags.Export then
-			local flags = Sylix.Flags.Export()
-			if Sylix.SendNotification then
-				local count = 0
-				for _ in pairs(flags) do count = count + 1 end
-				Sylix.SendNotification("Exported " .. tostring(count) .. " flags", "Flags")
-			end
-		end
-	end)
-	AdvancedSection2:AddButton("Clear Flags", "Reset all flags", function()
-		if Sylix.Flags and Sylix.Flags.Clear then
-			Sylix.Flags.Clear()
-			if Sylix.SendNotification then
-				Sylix.SendNotification("Flags cleared", "Flags")
-			end
-		end
-	end)
-	
-	local AdvancedSection3 = AdvancedTab:AddSection("Notifications")
-	AdvancedSection3:AddButton("Test Notification", "Send a test notification", function()
-		if Sylix.SendNotification then
-			Sylix.SendNotification("This is a test notification!", "Test")
-		end
-	end)
-	AdvancedSection3:AddButton("Clear All Notifications", "Clear all notifications", function()
-		if Sylix.ClearNotifications then
-			Sylix.ClearNotifications()
-		end
-	end)
-	
-	local toggleConnection
-	toggleConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then return end
-		if input.KeyCode == Enum.KeyCode.K then
-			ExampleWindow:ToggleVisibility()
-		end
-	end)
-	
-	ExampleWindow.Destroy = function()
-		if toggleConnection then
-			toggleConnection:Disconnect()
-			toggleConnection = nil
-		end
-		if ExampleWindow.OnClose then
-			ExampleWindow.OnClose()
-		end
-	end
-
-	ExampleWindow:CreateSettingsTab()
-	
-	return ExampleWindow
-end
-
-local NotificationsModule = MODULES.Notifications()
+local NotificationsModule = MODULES.Notifications
 if NotificationsModule and type(NotificationsModule) == "table" then
 	Sylix.Notifications = NotificationsModule
 	Sylix.SendNotification = function(message, titleText)

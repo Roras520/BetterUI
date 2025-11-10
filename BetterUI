@@ -1,12 +1,17 @@
 --[[
     Sylix UI Library
     Created by Stacm/Stack
-    Build 1.5.2
-    Date: 2025-11-08
+    Build 1.6.1
+    Date: 2025-11-10
     Changelogs:
-	- Added background radar gradient
-	- Added DarkGradient and MidnightGalaxy themes with gradient effects
-	- Maybe fixed issue where the theme would not apply correctly when you set it in the window config
+	- Accent bar is now completely invisible on UI initialization
+	- Removed all font editor options and functionality
+	- Added real-time layout switching (Vertical/Horizontal)
+	- Added ChangeLayout function for dynamic layout changes
+	- Added layout changer option to Settings tab
+	- Separator line now hides in horizontal layout
+	- Tab sidebar is now scrollable in both layouts
+	- Accent bars auto-disable in horizontal layout
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -1056,20 +1061,40 @@ local function UpdateAccentBars()
 	
 	local CurrentThemeData = Creator.GetCurrentTheme()
 	local accentBarsEnabled = CurrentThemeData.AccentBarsEnabled == true
+	local isHorizontal = currentWindow.TabLayout == "Horizontal"
+	
+	if currentWindow.SidebarSeparator then
+		currentWindow.SidebarSeparator.Visible = not isHorizontal
+	end
 	
 	local TabSelectedLineMover = MainFrame:FindFirstChild("TabLine")
 	if TabSelectedLineMover then
-		TabSelectedLineMover.Visible = accentBarsEnabled
-		if not accentBarsEnabled then
+		TabSelectedLineMover.Visible = accentBarsEnabled and not isHorizontal
+		if not accentBarsEnabled or isHorizontal then
 			TabSelectedLineMover.BackgroundTransparency = 1
 		end
 	end
 	
+	local TabLineTopDot = MainFrame:FindFirstChild("TabLineTopDot")
+	if TabLineTopDot then
+		TabLineTopDot.Visible = accentBarsEnabled and not isHorizontal
+	end
+	
+	local TabLineBottomDot = MainFrame:FindFirstChild("TabLineBottomDot")
+	if TabLineBottomDot then
+		TabLineBottomDot.Visible = accentBarsEnabled and not isHorizontal
+	end
+	
 	for _, TabObj in pairs(currentWindow.tabs or {}) do
 		if TabObj.IndicatorGuider then
-			TabObj.IndicatorGuider.Visible = accentBarsEnabled
-			if not accentBarsEnabled then
+			if isHorizontal then
+				TabObj.IndicatorGuider.Visible = false
 				TabObj.IndicatorGuider.BackgroundTransparency = 1
+			else
+				TabObj.IndicatorGuider.Visible = accentBarsEnabled
+				if not accentBarsEnabled then
+					TabObj.IndicatorGuider.BackgroundTransparency = 1
+				end
 			end
 		end
 	end
@@ -1077,8 +1102,8 @@ local function UpdateAccentBars()
 	if currentWindow.TabButtonLines then
 		for _, Line in ipairs(currentWindow.TabButtonLines) do
 			if Line and Line.Parent then
-				Line.Visible = accentBarsEnabled
-				if not accentBarsEnabled then
+				Line.Visible = accentBarsEnabled and not isHorizontal
+				if not accentBarsEnabled or isHorizontal then
 					Line.BackgroundTransparency = 1
 				end
 			end
@@ -1401,6 +1426,7 @@ local function CreateWindow(Config)
 	Window.searchElements = {}
 	Window.Acrylic = Config.Acrylic or false
 	Window.OnClose = Config.OnClose or function() end
+	Window.TabLayout = Config.TabLayout or "Vertical"
 	rippleEffectsOn = Config.rippleEffectsOn or false
 
 	if Config.Theme then
@@ -1452,18 +1478,22 @@ local function CreateWindow(Config)
 	MainFrame.Active = true
 	MainFrame.Visible = false
 
+	local isHorizontalLayout = Config.TabLayout == "Horizontal"
+	
 	local TabLineTopDot = createStyledEl("Frame", MainFrame, {
 		size = UDim2.new(0, 4, 0, 0),
 		position = UDim2.new(0.017, 0, 0.103, 3),
 		transparency = 1,
-		name = "TabLineTopDot"
+		name = "TabLineTopDot",
+		visible = not isHorizontalLayout
 	})
 
 	local TabLineBottomDot = createStyledEl("Frame", MainFrame, {
 		size = UDim2.new(0, 4, 0, 0),
 		position = UDim2.new(0.017, 0, 0.103, 24),
 		transparency = 1,
-		name = "TabLineBottomDot"
+		name = "TabLineBottomDot",
+		visible = not isHorizontalLayout
 	})
 
 			local accentBarsEnabled = CurrentThemeData.AccentBarsEnabled == true
@@ -1475,7 +1505,7 @@ local function CreateWindow(Config)
 				transparency = CurrentThemeData.TabSelectedLineTransparency or 0.24,
 				cornerRadius = 12,
 				name = "TabLine",
-				visible = accentBarsEnabled,
+				visible = false,
 		theme = {
 			property = "BackgroundColor3",
 			themeProperty = "Accent"
@@ -1873,20 +1903,25 @@ local function CreateWindow(Config)
 
 	local TabWidth = Config.TabWidth or 160
 
+	local isHorizontal = Window.TabLayout == "Horizontal"
+	
 	local SidebarSeparator = createStyledEl("Frame", MainFrame, {
 		size = UDim2.new(0, 1, 1, -42),
 		position = UDim2.fromOffset(TabWidth + 12, 42),
 		backgroundColor = CurrentThemeData.TitleBarLine,
 		transparency = CurrentThemeData.TitleBarLineTransparency or 0.5,
+		visible = not isHorizontal,
 		theme = {
 			property = "BackgroundColor3",
 			themeProperty = "TitleBarLine"
 		}
 	})
-
+	
+	Window.SidebarSeparator = SidebarSeparator
+	
 	local TabContainer = createStyledEl("Frame", MainFrame, {
-		size = UDim2.new(0, TabWidth, 1, -66),
-		position = UDim2.fromOffset(12, 54),
+		size = isHorizontal and UDim2.new(1, -24, 0, 40) or UDim2.new(0, TabWidth, 1, -66),
+		position = isHorizontal and UDim2.fromOffset(12, 54) or UDim2.fromOffset(12, 54),
 		transparency = 1
 	})
 	TabContainer.ClipsDescendants = true
@@ -1895,17 +1930,30 @@ local function CreateWindow(Config)
 		size = UDim2.fromScale(1, 1),
 		transparency = 1
 	})
-	TabScroll.ScrollBarThickness = 0
-	TabScroll.ScrollBarImageTransparency = 1
+	TabScroll.ScrollBarThickness = 3
+	TabScroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+	TabScroll.ScrollBarImageTransparency = 0.95
 	TabScroll.CanvasSize = UDim2.fromScale(0, 0)
-	TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-	createPadding(TabScroll, 0, 0, 0, 3)
-	createListLayout(TabScroll, currentCustomization.Spacing.TabButtonSpacing, Enum.SortOrder.LayoutOrder)
+	TabScroll.BottomImage = "rbxassetid://6889812791"
+	TabScroll.MidImage = "rbxassetid://6889812721"
+	TabScroll.TopImage = "rbxassetid://6276641225"
+	
+	if isHorizontal then
+		TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
+		TabScroll.ScrollingDirection = Enum.ScrollingDirection.X
+		createPadding(TabScroll, 0, 0, 0, 0)
+		local listLayout = createListLayout(TabScroll, currentCustomization.Spacing.TabButtonSpacing, Enum.SortOrder.LayoutOrder)
+		listLayout.FillDirection = Enum.FillDirection.Horizontal
+	else
+		TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		TabScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+		createPadding(TabScroll, 0, 0, 0, 3)
+		createListLayout(TabScroll, currentCustomization.Spacing.TabButtonSpacing, Enum.SortOrder.LayoutOrder)
+	end
 
 	local ContainerCanvas = createStyledEl("Frame", MainFrame, {
-		size = UDim2.new(1, -TabWidth - 32, 1, -66),
-		position = UDim2.fromOffset(TabWidth + 26, 54),
+		size = isHorizontal and UDim2.new(1, -24, 1, -110) or UDim2.new(1, -TabWidth - 32, 1, -66),
+		position = isHorizontal and UDim2.fromOffset(12, 100) or UDim2.fromOffset(TabWidth + 26, 54),
 		transparency = 1
 	})
 
@@ -1916,6 +1964,14 @@ local function CreateWindow(Config)
 
 	Window.TabScroll = TabScroll
 	Window.ContainerHolder = ContainerHolder
+	Window.TabContainer = TabContainer
+	Window.ContainerCanvas = ContainerCanvas
+	Window.MainFrame = MainFrame
+	Window.TabWidth = TabWidth
+	Window.WindowSize = WindowSize
+	Window.TabSelectedLineMover = TabSelectedLineMover
+	Window.TabLineTopDot = TabLineTopDot
+	Window.TabLineBottomDot = TabLineBottomDot
 
 	function Window:ToggleVisibility()
 		local IsVisible = MainFrame.Visible
@@ -1923,6 +1979,107 @@ local function CreateWindow(Config)
 
 		if not IsVisible then
 			tweenProperty(MainFrame, "Size", WindowSize, 0.24)
+		end
+	end
+	
+	function Window:ChangeLayout(NewLayout)
+		if NewLayout == nil then
+			return
+		end
+		if NewLayout ~= "Vertical" and NewLayout ~= "Horizontal" then
+			return
+		end
+		
+		local isHorizontal = NewLayout == "Horizontal"
+		
+		if Window.SidebarSeparator then
+			Window.SidebarSeparator.Visible = not isHorizontal
+		end
+		
+		if Window.TabLayout == NewLayout then
+			return
+		end
+		
+		Window.TabLayout = NewLayout
+		
+		if isHorizontal then
+			TabContainer.Size = UDim2.new(1, -24, 0, 40)
+			TabContainer.Position = UDim2.fromOffset(12, 54)
+			
+			TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
+			TabScroll.ScrollingDirection = Enum.ScrollingDirection.X
+			local listLayout = TabScroll:FindFirstChildOfClass("UIListLayout")
+			if listLayout then
+				listLayout.FillDirection = Enum.FillDirection.Horizontal
+			end
+			
+			ContainerCanvas.Size = UDim2.new(1, -24, 1, -110)
+			ContainerCanvas.Position = UDim2.fromOffset(12, 100)
+			
+			TabSelectedLineMover.Visible = false
+			TabLineTopDot.Visible = false
+			TabLineBottomDot.Visible = false
+		else
+			TabContainer.Size = UDim2.new(0, TabWidth, 1, -66)
+			TabContainer.Position = UDim2.fromOffset(12, 54)
+			
+			TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			TabScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+			local listLayout = TabScroll:FindFirstChildOfClass("UIListLayout")
+			if listLayout then
+				listLayout.FillDirection = Enum.FillDirection.Vertical
+			end
+			
+			ContainerCanvas.Size = UDim2.new(1, -TabWidth - 32, 1, -66)
+			ContainerCanvas.Position = UDim2.fromOffset(TabWidth + 26, 54)
+			
+			local CurrentThemeDataNow = Creator.GetCurrentTheme()
+			local accentBarsEnabled = CurrentThemeDataNow.AccentBarsEnabled == true
+			if accentBarsEnabled then
+				TabSelectedLineMover.Visible = true
+				TabLineTopDot.Visible = true
+				TabLineBottomDot.Visible = true
+			end
+		end
+		
+		for _, Tab in pairs(Window.tabs) do
+			local TabButton = Tab.Frame
+			local TabLabel = Tab.Label
+			local TabIndicator = Tab.IndicatorGuider
+			
+			if isHorizontal then
+				TabButton.Size = UDim2.new(0, 120, 1, 0)
+				TabLabel.TextXAlignment = Enum.TextXAlignment.Center
+				TabLabel.Position = UDim2.fromOffset(6, 0)
+				TabLabel.Size = UDim2.new(1, -12, 1, 0)
+				
+				if TabIndicator then
+					TabIndicator.Size = UDim2.new(1, -10, 0, 3)
+					TabIndicator.Position = UDim2.new(0, 5, 1, -8)
+					local corner = TabIndicator:FindFirstChildOfClass("UICorner")
+					if corner then
+						corner.CornerRadius = UDim.new(0, 2)
+					end
+				end
+			else
+				TabButton.Size = UDim2.new(1, 0, 0, 34)
+				TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+				TabLabel.Position = UDim2.fromOffset(12, 0)
+				TabLabel.Size = UDim2.new(1, -12, 1, 0)
+				
+				if TabIndicator then
+					TabIndicator.Size = UDim2.new(0, 4, 0, 21)
+					TabIndicator.Position = UDim2.new(0, 0, 0.092, 3)
+					local corner = TabIndicator:FindFirstChildOfClass("UICorner")
+					if corner then
+						corner.CornerRadius = UDim.new(0, 12)
+					end
+				end
+			end
+		end
+		
+		if Window.selectedTab and Window.selectedTab > 0 then
+			Window:SelectTab(Window.selectedTab)
 		end
 	end
 
@@ -1939,9 +2096,11 @@ local function CreateWindow(Config)
 		local Tab = {}
 		Window.tabCount = Window.tabCount + 1
 		local TabIndex = Window.tabCount
+		
+		local isHorizontal = Window.TabLayout == "Horizontal"
 
 		local TabButton = createStyledEl("TextButton", TabScroll, {
-			size = UDim2.new(1, 0, 0, 34),
+			size = isHorizontal and UDim2.new(0, 120, 1, 0) or UDim2.new(1, 0, 0, 34),
 			backgroundColor = Color3.fromRGB(90, 90, 90),
 			transparency = 1,
 			cornerRadius = CurrentThemeData.CornerRadius.TabButton,
@@ -1954,13 +2113,13 @@ local function CreateWindow(Config)
 
 		local accentBarsEnabled = CurrentThemeData.AccentBarsEnabled == true
 		local TabSelectedLineGuider = createStyledEl("Frame", TabButton, {
-			size = UDim2.new(0, 4, 0, 21),
-			position = UDim2.new(0, 0, 0.092, 3),
+			size = isHorizontal and UDim2.new(1, -10, 0, 3) or UDim2.new(0, 4, 0, 21),
+			position = isHorizontal and UDim2.new(0, 5, 1, -8) or UDim2.new(0, 0, 0.092, 3),
 			backgroundColor = CurrentThemeData.Accent,
 			transparency = 1,
-			cornerRadius = 12,
+			cornerRadius = isHorizontal and 2 or 12,
 			name = "TabLine",
-			visible = accentBarsEnabled,
+			visible = false,
 			theme = {
 				property = "BackgroundColor3",
 				themeProperty = "Accent"
@@ -1975,10 +2134,10 @@ local function CreateWindow(Config)
 			font = CurrentThemeData.Fonts.TabText,
 			textSize = CurrentThemeData.TextSizes.TabText,
 			textColor = Color3.fromRGB(135, 135, 140),
-			textXAlignment = Enum.TextXAlignment.Left
+			textXAlignment = isHorizontal and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
 		})
 
-		if Icon then
+		if Icon and not isHorizontal then
 			local IconStr = typeof(Icon) == "string" and (string.find(Icon, "rbxassetid://") and Icon or "rbxassetid://" .. Icon) or "rbxassetid://" .. tostring(Icon)
 			local TabIcon = createStyledEl("ImageLabel", TabButton, {
 				image = IconStr,
@@ -1990,6 +2149,11 @@ local function CreateWindow(Config)
 
 			TabLabel.Position = UDim2.fromOffset(32, 0)
 			TabLabel.Size = UDim2.new(1, -44, 1, 0)
+		end
+		
+		if isHorizontal then
+			TabLabel.Position = UDim2.fromOffset(6, 0)
+			TabLabel.Size = UDim2.new(1, -12, 1, 0)
 		end
 
 		local TabContent = createStyledEl("ScrollingFrame", ContainerHolder, {
@@ -2068,7 +2232,7 @@ local function CreateWindow(Config)
 			Tab.Selected = true
 			TabButton.BackgroundTransparency = 0.65
 			TabLabel.TextColor3 = Color3.fromRGB(245, 245, 250)
-			if accentBarsEnabled then
+			if accentBarsEnabled and not isHorizontal then
 				TabSelectedLineGuider.BackgroundTransparency = 0.24
 				TabSelectedLineGuider.Visible = true
 				table.insert(TabButtonLines, TabSelectedLineGuider)
@@ -3725,53 +3889,53 @@ local function CreateWindow(Config)
 			end
 			SelectedTab.Content.Visible = true
 
-			local CurrentThemeDataNow = Creator.GetCurrentTheme()
-			local accentBarsEnabled = CurrentThemeDataNow.AccentBarsEnabled == true
+		local CurrentThemeDataNow = Creator.GetCurrentTheme()
+		local accentBarsEnabled = CurrentThemeDataNow.AccentBarsEnabled == true
+		
+		if accentBarsEnabled and Window.TabLayout ~= "Horizontal" then
+			TabSelectedLineMover.Visible = true
+			TabSelectedLineMover.BackgroundTransparency = 0.24
+			local OldTabButtonLine = TabButtonLines[1]
+			if OldTabButtonLine then
+				OldTabButtonLine.BackgroundTransparency = 1
+				OldTabButtonLine = nil
+			end
+
+			table.clear(TabButtonLines)
+
+			local TabButtonIndicatorGuider = SelectedTab.IndicatorGuider
+			local GuiderAbsolutePos = TabButtonIndicatorGuider.AbsolutePosition
+			local GuiderAbsoluteSize = TabButtonIndicatorGuider.AbsoluteSize
+			local MainFrameAbsolutePos = MainFrame.AbsolutePosition
+
+			local OffsetX = GuiderAbsolutePos.X - MainFrameAbsolutePos.X
+			local OffsetY = GuiderAbsolutePos.Y - MainFrameAbsolutePos.Y
+			local TargetHeight = GuiderAbsoluteSize.Y
+
+			local targetTop = UDim2.new(0, OffsetX, 0, OffsetY)
+			local targetBottom = UDim2.new(0, OffsetX, 0, OffsetY + TargetHeight)
+
+			local currentTopY = TabLineTopDot.Position.Y.Offset
+			local currentBottomY = TabLineBottomDot.Position.Y.Offset
+
+			if currentTopY == 0 and currentBottomY == 0 then
+				TabLineTopDot.Position = targetTop
+				TabLineBottomDot.Position = targetBottom
+				TabSelectedLineMover.Position = targetTop
+				TabSelectedLineMover.Size = UDim2.new(0, 4, 0, TargetHeight)
+			end
+
+			local animConfig = currentCustomization.AccentBarAnimation
+			local animType = animConfig.Type or "Windows/Fluent"
+			local EasingStyle = animConfig.EasingStyle or Enum.EasingStyle.Quad
+			local EasingDirection = animConfig.EasingDirection or Enum.EasingDirection.Out
+			local Speed = animConfig.Time or 0.22
 			
-			if accentBarsEnabled then
-				TabSelectedLineMover.Visible = true
-				TabSelectedLineMover.BackgroundTransparency = 0.24
-				local OldTabButtonLine = TabButtonLines[1]
-				if OldTabButtonLine then
-					OldTabButtonLine.BackgroundTransparency = 1
-					OldTabButtonLine = nil
-				end
-
-				table.clear(TabButtonLines)
-
-				local TabButtonIndicatorGuider = SelectedTab.IndicatorGuider
-				local GuiderAbsolutePos = TabButtonIndicatorGuider.AbsolutePosition
-				local GuiderAbsoluteSize = TabButtonIndicatorGuider.AbsoluteSize
-				local MainFrameAbsolutePos = MainFrame.AbsolutePosition
-
-				local OffsetX = GuiderAbsolutePos.X - MainFrameAbsolutePos.X
-				local OffsetY = GuiderAbsolutePos.Y - MainFrameAbsolutePos.Y
-				local TargetHeight = GuiderAbsoluteSize.Y
-
-				local targetTop = UDim2.new(0, OffsetX, 0, OffsetY)
-				local targetBottom = UDim2.new(0, OffsetX, 0, OffsetY + TargetHeight)
-
-				local currentTopY = TabLineTopDot.Position.Y.Offset
-				local currentBottomY = TabLineBottomDot.Position.Y.Offset
-
-				if currentTopY == 0 and currentBottomY == 0 then
-					TabLineTopDot.Position = targetTop
-					TabLineBottomDot.Position = targetBottom
-					TabSelectedLineMover.Position = targetTop
-					TabSelectedLineMover.Size = UDim2.new(0, 4, 0, TargetHeight)
-				end
-
-				local animConfig = currentCustomization.AccentBarAnimation
-				local animType = animConfig.Type or "Windows/Fluent"
-				local EasingStyle = animConfig.EasingStyle or Enum.EasingStyle.Quad
-				local EasingDirection = animConfig.EasingDirection or Enum.EasingDirection.Out
-				local Speed = animConfig.Time or 0.22
-				
-				if animType == "Basic" then
-					tweenProperty(TabSelectedLineMover, "Position", targetTop, Speed, EasingStyle, EasingDirection)
-					tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, TargetHeight), Speed, EasingStyle, EasingDirection)
-				elseif animType == "Windows/Fluent" then
-					local movingUp = OffsetY < (currentTopY ~= 0 and currentTopY or OffsetY)
+			if animType == "Basic" then
+				tweenProperty(TabSelectedLineMover, "Position", targetTop, Speed, EasingStyle, EasingDirection)
+				tweenProperty(TabSelectedLineMover, "Size", UDim2.new(0, 4, 0, TargetHeight), Speed, EasingStyle, EasingDirection)
+			elseif animType == "Windows/Fluent" then
+				local movingUp = OffsetY < (currentTopY ~= 0 and currentTopY or OffsetY)
 
 					if movingUp then
 						tweenProperty(TabLineTopDot, "Position", targetTop, Speed, EasingStyle, EasingDirection)
@@ -3809,24 +3973,44 @@ local function CreateWindow(Config)
 						table.insert(TabButtonLines, TabButtonIndicatorGuider)
 					end
 				end)
-			else
+			end
+		elseif accentBarsEnabled and Window.TabLayout == "Horizontal" then
+			TabSelectedLineMover.Visible = false
+			TabSelectedLineMover.BackgroundTransparency = 1
+			TabLineTopDot.Visible = false
+			TabLineBottomDot.Visible = false
+			
+			for _, TabObj in pairs(Window.tabs) do
+				if TabObj.IndicatorGuider then
+					TabObj.IndicatorGuider.BackgroundTransparency = 1
+					TabObj.IndicatorGuider.Visible = false
+				end
+			end
+			
+			if SelectedTab.IndicatorGuider then
+				SelectedTab.IndicatorGuider.BackgroundTransparency = 1
+				SelectedTab.IndicatorGuider.Visible = false
+			end
+		else
+			if not accentBarsEnabled then
 				TabSelectedLineMover.BackgroundTransparency = 1
 				TabSelectedLineMover.Visible = false
-				local TabButtonIndicatorGuider = SelectedTab.IndicatorGuider
-				TabButtonIndicatorGuider.BackgroundTransparency = 1
-				TabButtonIndicatorGuider.Visible = false
+				if SelectedTab.IndicatorGuider then
+					SelectedTab.IndicatorGuider.BackgroundTransparency = 1
+					SelectedTab.IndicatorGuider.Visible = false
+				end
 				for _, Line in ipairs(TabButtonLines) do
 					Line.BackgroundTransparency = 1
 					Line.Visible = false
 				end
 				table.clear(TabButtonLines)
 			end
+		end
 
 		LastTabSwitch = tick()
 
 		return true
 	end
-end
 
 	Sylix.CreateSettingsTab = function(window)
 		local SettingsTab = window:CreateTab("Settings", nil)
@@ -3920,115 +4104,14 @@ end
 			end
 		end, "AcrylicToggle")
 		
-		local FontSection = SettingsTab:AddSection("Font Settings")
-		
-		local availableFonts = {
-			"GothamBold",
-			"GothamMedium",
-			"Gotham",
-			"SourceSansBold",
-			"SourceSansSemibold",
-			"SourceSans",
-			"Code",
-			"Highway",
-			"SciFi",
-			"Arcade",
-			"Fantasy",
-			"Antique",
-			"GrenzeGotisch",
-			"Bodoni",
-			"Garamond",
-			"Merriweather",
-			"Michroma",
-			"Roboto",
-			"RobotoMono",
-			"TitilliumWeb",
-			"JosefinSans",
-			"Montserrat",
-			"Oswald",
-			"CrimsonText",
-			"Kalam",
-			"Ubuntu",
-			"FredokaOne",
-			"PermanentMarker",
-			"ComingSoon",
-			"Bangers",
-			"Creepster",
-			"DenkOne",
-			"Fondamento",
-			"GloriaHallelujah",
-			"IndieFlower",
-			"Jura",
-			"Kalam",
-			"LuckiestGuy",
-			"Merriweather",
-			"Orbitron",
-			"PatrickHand",
-			"PoiretOne",
-			"Quicksand",
-			"Raleway",
-			"Righteous",
-			"RobotoCondensed",
-			"SpecialElite",
-			"TitilliumWeb"
-		}
-		
-		local function getFontName(fontEnum)
-			if not fontEnum then return "Gotham" end
-			local fontStr = tostring(fontEnum)
-			return fontStr:gsub("Enum.Font.", "")
-		end
-		
-		local function setFont(fontType, fontName)
-			local currentThemeName = currentTheme
-			if not THEMES[currentThemeName] then
-				currentThemeName = "Default"
+		local LayoutSection = SettingsTab:AddSection("Layout Settings")
+		local layoutOptions = {"Vertical", "Horizontal"}
+		local currentLayout = window.TabLayout or "Vertical"
+		LayoutSection:AddDropdown("Tab Layout", "Choose how tabs are displayed", layoutOptions, currentLayout, function(value)
+			if window.ChangeLayout then
+				window:ChangeLayout(value)
 			end
-			
-			if not THEMES["Custom"] then
-				THEMES["Custom"] = {}
-			end
-			
-			if not THEMES[currentThemeName].Fonts then
-				THEMES[currentThemeName].Fonts = {}
-			end
-			if not THEMES["Custom"].Fonts then
-				THEMES["Custom"].Fonts = {}
-			end
-			
-			local fontEnum = Enum.Font[fontName]
-			if fontEnum then
-				THEMES[currentThemeName].Fonts[fontType] = fontEnum
-				THEMES["Custom"].Fonts[fontType] = fontEnum
-				
-				SetTheme(currentThemeName)
-			end
-		end
-		
-		local titleFont = getFontName(currentThemeData.Fonts.TitleText or Enum.Font.GothamBold)
-		FontSection:AddDropdown("Title Bar Font", "Font for window title", availableFonts, titleFont, function(value)
-			setFont("TitleText", value)
-		end, "TitleBarFont")
-		
-		local sectionFont = getFontName(currentThemeData.Fonts.SectionText or Enum.Font.GothamBold)
-		FontSection:AddDropdown("Section Font", "Font for section titles", availableFonts, sectionFont, function(value)
-			setFont("SectionText", value)
-		end, "SectionFont")
-		
-		local tabFont = getFontName(currentThemeData.Fonts.TabText or Enum.Font.GothamMedium)
-		FontSection:AddDropdown("Tab Font", "Font for tab buttons", availableFonts, tabFont, function(value)
-			setFont("TabText", value)
-		end, "TabFont")
-		
-		local compTitleFont = getFontName(currentThemeData.Fonts.ComponentTitleText or Enum.Font.GothamMedium)
-		FontSection:AddDropdown("Component Title Font", "Font for component titles", availableFonts, compTitleFont, function(value)
-			setFont("ComponentTitleText", value)
-		end, "ComponentTitleFont")
-		
-		local compDescFont = getFontName(currentThemeData.Fonts.ComponentDescText or Enum.Font.Gotham)
-		FontSection:AddDropdown("Component Description Font", "Font for component descriptions", availableFonts, compDescFont, function(value)
-			setFont("ComponentDescText", value)
-		end, "ComponentDescFont")
+		end, "TabLayoutDropdown")
 		
 		return SettingsTab
 	end
@@ -4040,13 +4123,16 @@ end
 
 	SetAcrylic(Window.Acrylic)
 	SetTheme(Window.Theme)
+	Window:ChangeLayout(Window.TabLayout)
 	ApplyGradient()
+	UpdateAccentBars()
 
 	task.spawn(function()
 		task.wait(5)
 		if Config.Theme then
 			SetTheme(Window.Theme)
 		end
+		Window:ChangeLayout(Config.TabLayout)
 	end)
 
 	local ConnectionCleanup = Creator.AddSignal(RunService.Heartbeat, function()
@@ -4096,7 +4182,7 @@ THEMES.Default2 = {
 		SectionText = 16,
 		ComponentTitleText = 13,
 		ComponentDescText = 12,
-		TabText = 15
+		TabText = 15w
 	},
 	
 	Acrylic = {

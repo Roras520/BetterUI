@@ -4182,7 +4182,7 @@ THEMES.Default2 = {
 		SectionText = 16,
 		ComponentTitleText = 13,
 		ComponentDescText = 12,
-		TabText = 15w
+		TabText = 15
 	},
 	
 	Acrylic = {

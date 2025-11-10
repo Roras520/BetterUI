@@ -1170,7 +1170,7 @@ local function SetAcrylic(Enabled)
 	acrylicEnabled = Enabled
 
 	if Enabled and not BlurredGui then
-		BlurredGui = MODULES.Acrylic()
+		BlurredGui = MODULES.Acrylic.new()
 		if not (BlurredGui and type(BlurredGui) == "table" and BlurredGui.new) then
 			warn("Failed to apply acrylic: Could not load Acrylic module.")
 			acrylicEnabled = false
